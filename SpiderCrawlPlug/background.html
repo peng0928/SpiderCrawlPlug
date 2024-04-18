@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>抓包中心</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="js/css/jsoneditor.css" rel="stylesheet" type="text/css">
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="js/css/bootstrap_icon.css" rel="stylesheet"/>
+    <style>
+        .tooltip-inner {
+            max-width: 800px;
+            white-space: normal;
+            text-align: left;
+            color: white;
+            font-weight: bold;
+            background-color: #f57f17;
+        }
+
+        svg {
+            width: 70px; /* 设置宽度 */
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1051;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="#">抓包记录</a>
+        <div class="navbar-nav flex-row justify-content-end ml-auto">
+            <a class="nav-item nav-link" href="https://github.com/peng0928/SpiderCrawlPlug/issues" target="_blank"
+               style="font-size: 15px;">给作者提Bug!</a>
+            <a class="nav-item nav-link" href="#" id="sponsorLink" style="font-size: 15px;">感谢大佬们赞助!</a>
+            <div id="qrcode" style="display: none; position: absolute; z-index: 1000;">
+                <img src="./img/payme.jpg" alt="二维码" style="width: 200px; height: 300px;"/>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 触发按钮 -->
+<div class="toast-container">
+    <!-- Toast Component -->
+    <div class="toast" id="myToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="mr-auto" id="toastTitle"></strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body" id="toastBody">
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">搜索</span>
+        </div>
+        <input
+                type="text"
+                class="form-control"
+                placeholder="请输入"
+                aria-label="请输入"
+                aria-describedby="basic-addon1"
+                id="search"
+        />
+    </div>
+    <div>
+        <button type="button" class="btn btn-primary" id="get_data">
+            刷新(正序)
+        </button>
+        <button type="button" class="btn btn-success" id="get_data_last">
+            刷新(倒序)
+        </button>
+        <div style="float: right">
+            <button type="button" class="btn btn-warning" id="del_data">
+                清除数据
+            </button>
+        </div>
+        <!--        <button type="button" class="btn btn-warning" id="clear_data">-->
+        <!--            清除数据-->
+        <!--        </button>-->
+    </div>
+</div>
+<div class="container">
+    <div style="min-height: 50px; padding-top: 10px; display: flex">
+        <div>
+            <span class="badge badge-success">
+                数量:
+                <span id="num"></span>
+            </span>
+        </div>
+        <div style="padding-left: 30px">
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Xhr">Xhr</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Doc">Doc</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Css">Css</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Js">Js</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Img">Img</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Media">Media</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Manifest">Manifest</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_WS">WS</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Wasm">Wasm</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="get_Other">Other</button>
+        </div>
+    </div>
+</div>
+
+<div>
+    <table class="table table-hover table-bordered">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col" style="min-width: 60px">序号</th>
+            <th scope="col" style="min-width: 155px">时间</th>
+            <th scope="col">httpVersion</th>
+            <th scope="col">请求方法</th>
+            <th scope="col" style="max-width: 50px">host</th>
+            <th scope="col">url</th>
+            <th scope="col">status</th>
+            <th scope="col">响应大小</th>
+            <th scope="col">类型</th>
+        </tr>
+        </thead>
+        <tbody id="tbody" style="font-size: 13px"></tbody>
+    </table>
+</div>
+<!-- Button trigger modal -->
+<div
+        class="modal fade"
+        id="exampleModal"
+        tabindex="-1"
+        aria-labelledby="ModalLabel"
+        aria-hidden="true"
+>
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <!--            <div class="modal-header">-->
+            <!--            &lt;!&ndash;头&ndash;&gt;-->
+            <!--            </div>-->
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a
+                            class="nav-link active"
+                            id="home-tab"
+                            data-toggle="tab"
+                            href="#Headers"
+                            role="tab"
+                            aria-controls="Headers"
+                            aria-selected="true"
+                    >Headers</a
+                    >
+                </li>
+                <li class="nav-item">
+                    <a
+                            class="nav-link"
+                            id="profile-tab"
+                            data-toggle="tab"
+                            href="#Playload"
+                            role="tab"
+                            aria-controls="profile"
+                            aria-selected="false"
+                    >Playload</a
+                    >
+                </li>
+                <li class="nav-item">
+                    <a
+                            class="nav-link"
+                            id="Preview-tab"
+                            data-toggle="tab"
+                            href="#Preview"
+                            role="tab"
+                            aria-controls="Preview"
+                            aria-selected="false"
+                    >Preview</a
+                    >
+                </li>
+                <li class="nav-item">
+                    <a
+                            class="nav-link"
+                            id="Response-tab"
+                            data-toggle="tab"
+                            href="#Response"
+                            role="tab"
+                            aria-controls="Response"
+                            aria-selected="false"
+                    >Response</a
+                    >
+                </li>
+                <li class="nav-item">
+                    <a
+                            class="nav-link"
+                            id="Action-tab"
+                            data-toggle="tab"
+                            href="#Action"
+                            role="tab"
+                            aria-controls="Action"
+                            aria-selected="false"
+                    >操作</a
+                    >
+                </li>
+
+            </ul>
+            <div class="modal-body">
+                <div class="tab-content" id="myTabContent">
+                    <div
+                            class="tab-pane fade show active"
+                            id="Headers"
+                            role="tabpanel"
+                            aria-labelledby="Headers-tab"
+                    >
+                        <div
+                                id="Generaltoggle"
+                                role="button"
+                                aria-expanded="false"
+                                aria-controls="Generalcollapse"
+                                data-toggle="collapse"
+                                data-target="#Generalcollapse"
+                                style="background-color: rgb(241, 244, 249); height: 30px"
+                        >
+                            <i class="bi bi-caret-right-fill" id="GeneralIcon"></i>
+                            General
+                        </div>
+                        <div class="collapse" id="Generalcollapse">
+                            <div class="card card-body">
+                                <div
+                                        id="GeneralModalBody"
+                                        style="
+                        overflow-x: auto; /* 横向滚动 */
+                        white-space: nowrap; /* 防止内容换行 */
+                        flex-direction: row; /* 子元素横向排列 */
+                        font-size: 15px;
+                        padding-bottom: 2%;
+                      "
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div style="height: 20px"></div>
+                        <div
+                                id="Resonsetoggle"
+                                role="button"
+                                aria-expanded="false"
+                                aria-controls="RespHeaderscollapse"
+                                data-toggle="collapse"
+                                data-target="#RespHeaderscollapse"
+                                style="background-color: #fff176; height: 30px"
+                        >
+                            <i class="bi bi-caret-right-fill" id="ResptoggleIcon"></i>
+                            Response Headers
+                        </div>
+                        <div class="collapse" id="RespHeaderscollapse">
+                            <div class="card card-body">
+                                <div
+                                        id="RespHeadersModalBody"
+                                        style="
+                        overflow-x: auto; /* 横向滚动 */
+                        white-space: nowrap; /* 防止内容换行 */
+                        flex-direction: row;
+                        padding-bottom: 2%;
+                        font-size: 15px;
+                      "
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div style="height: 20px"></div>
+                        <div
+                                id="toggleDiv"
+                                role="button"
+                                aria-expanded="false"
+                                aria-controls="Headerscollapse"
+                                data-toggle="collapse"
+                                data-target="#Headerscollapse"
+                                style="background-color: #00e676; height: 30px"
+                        >
+                            <i class="bi bi-caret-right-fill" id="toggleIcon"></i>
+                            Request Headers
+                        </div>
+                        <div class="collapse" id="Headerscollapse">
+                            <div class="card card-body">
+                                <div
+                                        id="HeadersModalBody"
+                                        style="
+                        overflow-x: auto; /* 横向滚动 */
+                        white-space: nowrap; /* 防止内容换行 */
+                        flex-direction: row;
+                        padding-bottom: 2%;
+                        font-size: 15px;
+                      "
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                            class="tab-pane fade"
+                            id="Playload"
+                            role="tabpanel"
+                            aria-labelledby="Playload-tab"
+                    >
+                        <div style="background-color: rgb(241, 244, 249); height: 30px">
+                            <i class="bi bi-p-circle-fill"></i>
+                            Params
+                        </div>
+                        <div class="card card-body">
+                            <div id="ParamsModalBody"></div>
+                        </div>
+                        <div style="height: 20px"></div>
+                        <div style="background-color: rgb(241, 244, 249); height: 30px">
+                            <i class="bi bi-send"></i>
+                            Data
+                        </div>
+                        <div class="card card-body">
+                            <div id="DataModalBody" style="height: 400px;"></div>
+                        </div>
+                    </div>
+                    <div
+                            class="tab-pane fade"
+                            id="Preview"
+                            role="tabpanel"
+                            aria-labelledby="Preview-tab"
+                    >
+                        <div class="card card-body">
+                            <div id="PreviewModalBody" style="height: 500px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                            class="tab-pane fade"
+                            id="Response"
+                            role="tabpanel"
+                            aria-labelledby="Response-tab"
+                    >
+                        <div class="card card-body">
+                            <div id="ResponseModalBody"></div>
+                        </div>
+                    </div>
+                    <div
+                            class="tab-pane fade"
+                            id="Action"
+                            role="tabpanel"
+                            aria-labelledby="Action-tab"
+                    >
+                        <div class="card card-body">
+                            <div id="ActionModalBody"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-dismiss="modal"
+                >
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="js/jquery-1.8.3.js"></script>
+<script type="text/javascript" src="js/js/popper.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/popup.js"></script>
+<script type="text/javascript" src="js/background.js"></script>
+<script type="text/javascript" src="js/js/jsoneditor.min.js"></script>
+</body>
+</html>
