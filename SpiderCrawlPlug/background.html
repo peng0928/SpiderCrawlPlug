@@ -80,6 +80,7 @@
         <button type="button" class="btn btn-success" id="get_data_last">
             刷新(倒序)
         </button>
+        <button id="deleteButton" style="display: none;" type="button" class="btn btn-warning">删除选中</button>
         <div style="float: right">
             <button type="button" class="btn btn-warning" id="del_data">
                 清除数据
@@ -117,6 +118,7 @@
     <table class="table table-hover table-bordered">
         <thead class="thead-light">
         <tr>
+            <th scope="col" style="min-width: 60px">选择</th>
             <th scope="col" style="min-width: 60px">序号</th>
             <th scope="col" style="min-width: 155px">时间</th>
             <th scope="col">httpVersion</th>

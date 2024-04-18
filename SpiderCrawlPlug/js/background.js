@@ -123,13 +123,13 @@ function del_data() {
     };
 }
 
-let lc = 0;
+let lc = 1;
 
 function get_data(e, getType = null) {
+    lc = 0;
     var numElement = document.getElementById("num");
     numElement.innerHTML = 0;
     var searchValue = search()
-    lc = 0;
     let tbody = document.getElementById("tbody"); // 获取表格的tbody元素
     tbody.innerHTML = "";
     const request = indexedDB.open("myDatabase", db_version);
@@ -210,6 +210,7 @@ function make_data(cursor, getType) {
 
     // 为当前数据创建一个新的表格行
     const row = tbody.insertRow();
+    row.insertCell().innerHTML = `<td><input style="width: 15px;height: 15px" type="checkbox" class="select-checkbox" pid="${cursor.value.id}"></td>`;
     row.insertCell().innerHTML = `<td style="width: 10px;">${lc}</td>`;
     row.insertCell().innerHTML = `<td style="width: 500px;white-space: nowrap;">${get_time(
         cursor.value.timestamp
@@ -243,6 +244,10 @@ function make_data(cursor, getType) {
     lc = lc + 1;
     var numElement = document.getElementById("num");
     numElement.innerHTML = lc;
+    row.addEventListener('click', function (event) {
+        const checkbox = this.querySelector('.select-checkbox');
+        checkbox.checked = !checkbox.checked;
+    });
     $(function () {
         $('[data-toggle="tooltip"]').tooltip({
             container: "body",
@@ -550,7 +555,6 @@ function urlParse(url, resourceType, row, cursor) {
     var div = document.createElement('td');
     var p = document.createElement('p');
 
-    // 设置p元素的属性和样式
     p.setAttribute('data-toggle', 'tooltip');
     p.setAttribute('data-placement', 'top');
     p.setAttribute('title', url); // 假设url是有效的URL字符串
@@ -703,4 +707,64 @@ document.addEventListener('DOMContentLoaded', function () {
         // 隐藏二维码
         qrcode.style.display = 'none';
     });
+});
+
+function del_one_data(pid) {
+    const request = indexedDB.open("myDatabase", db_version);
+    request.onupgradeneeded = function (event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains("myDataStore")) {
+            db.createObjectStore("myDataStore", {
+                keyPath: "id",
+                autoIncrement: true,
+            });
+        }
+    };
+    request.onsuccess = function (event) {
+        const db = event.target.result;
+        const transaction = db.transaction("myDataStore", "readwrite");
+        const store = transaction.objectStore("myDataStore");
+        const request = store.delete(Number(pid));
+        request.onsuccess = function (e) {
+            console.log('Item deleted successfully');
+        };
+
+        request.onerror = function (e) {
+            console.error('Delete error:', e);
+        };
+        transaction.oncomplete = function () {
+            // 可选：关闭数据库连接
+            db.close();
+        };
+        transaction.onerror = function (e) {
+            console.error('Transaction error:', e);
+        };
+    };
+
+    request.onerror = function (event) {
+        console.error("打开IndexedDB时发生错误:", event.target.errorCode);
+    };
+}
+
+// 监听整个document的click事件
+document.addEventListener('click', function (event) {
+    // 检查点击的是否是复选框
+    const isChecked = Array.from(document.querySelectorAll('.select-checkbox')).some(el => el.checked);
+    // 根据是否有复选框被选中，显示或隐藏删除按钮
+    const deleteButton = document.getElementById('deleteButton');
+    deleteButton.style.display = isChecked ? 'inline-block' : 'none';
+    // 检查点击的是否是删除按钮
+    if (event.target.id === 'deleteButton') {
+        // 找到所有选中的复选框所在的行并删除它们
+        document.querySelectorAll('.select-checkbox:checked').forEach(checkbox => {
+            var pid = checkbox.getAttribute('pid')
+            del_one_data(pid)
+            var numElement = document.getElementById("num");
+            lc = lc - 1
+            numElement.innerHTML = lc;
+            checkbox.closest('tr').remove();
+        });
+        // 删除后隐藏删除按钮，因为至少有一个复选框被选中的情况不再成立
+        deleteButton.style.display = 'none';
+    }
 });

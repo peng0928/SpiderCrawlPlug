@@ -4,7 +4,7 @@ Google Chrome 网页包捕获插件、网络爬虫数据包捕获、数据包捕
 `
 `Google Chrome web packet capture plugin, web crawler packet capture, packet capture plugin, Google plugin.`
 
-## 安装方式
+## 安装方式(安装完成需要重启浏览器)
 1. [GitHub](https://github.com/peng0928/SpiderCrawlPlug)
 2. [下载链接](https://github.com/peng0928/SpiderCrawlPlug/archive/refs/heads/main.zip)
 温馨提示:
