@@ -12,7 +12,7 @@ $("#get_data").click((e) => {
     get_data(dataflag, dataType);
 });
 $("#get_Xhr").click((e) => {
-    dataType = ['xhr', 'preflight'];
+    dataType = ['xhr', 'fetch'];
     get_data(dataflag, dataType);
 });
 $("#get_Doc").click((e) => {
@@ -212,10 +212,10 @@ function make_data(cursor, getType) {
     const row = tbody.insertRow();
     row.insertCell().innerHTML = `<td><input style="width: 15px;height: 15px" type="checkbox" class="select-checkbox" pid="${cursor.value.id}"></td>`;
     row.insertCell().innerHTML = `<td style="width: 10px;">${lc}</td>`;
-    row.insertCell().innerHTML = `<td style="width: 500px;white-space: nowrap;">${get_time(
-        cursor.value.timestamp
-    )}</td>`;
-    row.insertCell().innerHTML = `<td ">${httpVersion}</td>`;
+    row.insertCell().innerHTML = `<td><div style="width: 50px">
+${get_time(cursor.value.timestamp)}
+</div></td>`;
+    row.insertCell().innerHTML = `<td><div style="width: 50px">${httpVersion}</div></td>`;
     row.insertCell().textContent = method;
     // row.insertCell().innerHTML = `<td style="background-color: green; width: 50px">${extractDomain(url)}</td>`;
     docDomain(row, extractDomain(url))
@@ -305,11 +305,11 @@ function GeneralModalBody(Data) {
     var ModalBody = document.getElementById("GeneralModalBody");
     ModalBody.innerHTML = `
     <div style="display: flex;align-items: center;">
-    <div style="min-width: 20%;">Request URL:</div> <div> ${Data.request.url}</div></div>
+    <div style="min-width: 20%;">Request URL:</div> <div style="color: blue"> ${Data.request.url}</div></div>
     <div style="display: flex;align-items: center;">
-    <div style="min-width: 20%;">Request MethodL:</div> <div> ${Data.request.method}</div></div>
+    <div style="min-width: 20%;">Request MethodL:</div><div style="color: red"> ${Data.request.method}</div></div>
     <div style="display: flex;align-items: center;">
-    <div style="min-width: 20%;">Status Code:</div> <div> ${Data.response.status}</div></div>
+    <div style="min-width: 20%;">Status Code:</div> <div style="color: green"> ${Data.response.status}</div></div>
   `;
 }
 
@@ -401,8 +401,9 @@ function HeadersModel(Data) {
         ModalBody.appendChild(document.createElement("div")).innerHTML = `
     <div style="
     display: flex;
-    align-items: center;"
-    >
+    align-items: center;
+    font-size: 13px;
+    ">
       <div style="min-width: 20%;">${item.name.replace(/^:/, "")}:</div>
       <div>${item.value}</div>
     </div>
@@ -417,8 +418,9 @@ function RespHeadersModel(Data) {
         ModalBody.appendChild(document.createElement("div")).innerHTML = `
     <div style="
     display: flex;
-    align-items: center;"
-    >
+    align-items: center;
+    font-size: 13px;
+    ">
       <div style="min-width: 20%;">${item.name.replace(/^:/, "")}:</div>
       <div>${item.value}</div>
     </div>
