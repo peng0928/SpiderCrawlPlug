@@ -1,6 +1,19 @@
 console.log("background");
 let dataflag = true;
 let dataType = null;
+let spiderSwitch = null;
+chrome.storage.local.get('spiderSwitch', function (result) {
+    spiderSwitch = result.spiderSwitch;
+    if (spiderSwitch) {
+        // 如果spiderSwitch为true，则显示span元素
+        listeningCrawl.style.display = 'inline'; // 或者 'block', 'flex' 等，取决于你的布局需求
+        listeningStop.style.display = 'none'; // 或者 'block', 'flex' 等，取决于你的布局需求
+    } else {
+        // 如果spiderSwitch为false，则隐藏span元素
+        listeningStop.style.display = 'inline';
+        listeningCrawl.style.display = 'none';
+    }
+});
 
 function testBackground() {
     alert("你好，我是background！");
@@ -210,7 +223,7 @@ function make_data(cursor, getType) {
 
     // 为当前数据创建一个新的表格行
     const row = tbody.insertRow();
-    row.insertCell().innerHTML = `<td><input style="width: 15px;height: 15px" type="checkbox" class="select-checkbox" pid="${cursor.value.id}"></td>`;
+    row.insertCell().innerHTML = `<td class="Incheckbox"><input style="width: 15px;height: 15px" type="checkbox" class="select-checkbox" pid="${cursor.value.id}"></td>`;
     row.insertCell().innerHTML = `<td style="width: 10px;">${lc}</td>`;
     row.insertCell().innerHTML = `<td><div style="width: 50px">
 ${get_time(cursor.value.timestamp)}
@@ -244,7 +257,7 @@ ${get_time(cursor.value.timestamp)}
     lc = lc + 1;
     var numElement = document.getElementById("num");
     numElement.innerHTML = lc;
-    row.addEventListener('click', function (event) {
+    row.querySelector('td').addEventListener('click', function (event) {
         const checkbox = this.querySelector('.select-checkbox');
         checkbox.checked = !checkbox.checked;
     });
@@ -535,7 +548,6 @@ $(document).ready(function () {
 function search() {
     const inputElement = document.getElementById('search');
     const inputValue = inputElement.value.trim() || false;
-    console.log('search:', inputValue); // 打印输入框的值
     return inputValue
 }
 
