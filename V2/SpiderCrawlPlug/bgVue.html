@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SpiderCrawl</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval'">
+    <link rel="stylesheet" href="js/vuetify/css/icon.css">
+    <link rel="stylesheet" href="js/vuetify/index.css">
+    <!-- import JavaScript -->
+    <style>
+        svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        .header {
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .twarp {
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        .output {
+            border: 1px solid #CCC;
+            padding: 10px;
+            outline: none;
+            font: 16px/1.5em Consolas, Menlo, Monaco, 'Courier New', monospace;
+            white-space: pre;
+            tab-size: 4;
+            background-color: #F0F8FF; /* "aliceblue" - happened on that by chance choosing a color in chrome inspector tools */
+            word-wrap: break-word;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <v-snackbar
+            v-model="snackbar"
+            :style="{ bottom: `90%` }"
+            timeout="1000"
+            @click="snackbar = false"
+            :color="snackbar_color"
+    >
+        <v-icon left>{{ snackbar_ico }}</v-icon>
+        {{ snackbar_text }}
+    </v-snackbar>
+    <v-dialog
+            v-model="spiderDialog"
+            max-width="80%"
+    >
+        <v-card>
+            <v-tabs
+                    v-model="spiderTab"
+                    bg-color="#e9eef9"
+                    min-height="600"
+                    style="position:sticky; top: 0; z-index: 10"
+            >
+                <v-tab value="Header" style="text-transform: none !important;">Header</v-tab>
+                <v-tab value="Payload" style="text-transform: none !important;">Payload</v-tab>
+                <v-tab value="Preview" style="text-transform: none !important;">Preview</v-tab>
+                <v-tab value="Response" style="text-transform: none !important;">Response</v-tab>
+                <v-tab value="cookie" style="text-transform: none !important;">Cookie</v-tab>
+            </v-tabs>
+
+            <v-card-text style="height: 80vh; ">
+                <v-tabs-window v-model="spiderTab">
+                    <v-tabs-window-item value="Header">
+                        <div style="padding-bottom: 30px;">
+                            <v-card
+                                    variant="tonal"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                                    style="margin-bottom: 16px;"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            <div class="d-flex">
+                                                <div @click="handleHeaderIcon('general')" class="me-auto"
+                                                     style="float: left; width: 90%">
+                                                    <v-icon style="width: 20px; height: 20px">
+                                                        {{ headerIcon.general ? 'mdi-arrow-down-bold-box' :
+                                                        'mdi-arrow-right-bold-box' }}
+                                                    </v-icon>
+                                                    <span style="font-weight: bold">General</span>
+                                                </div>
+                                                <div style="width: 10%; float: right;text-align: right">
+                                                    <v-icon style="width: 20px; height: 20px"
+                                                            @click="handleCurlStr(requestObject.request)">
+                                                        mdi mdi-curling
+                                                    </v-icon>
+
+                                                    <v-icon style="width: 20px; height: 20px" @click="logger('JSON复制')">
+                                                        mdi mdi-content-copy
+                                                    </v-icon>
+                                                </div>
+                                            </div>
+                                        </v-list-item-title>
+                                        <div v-if="headerIcon.general" class="header"
+                                             style="padding-top: 10px; max-height: 35vh">
+                                            <div v-for="(value, key, index) in requestObject.header.general"
+                                                 :key="index">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div style="width: 20%">{{key}}:</div>
+                                                    <div style="width: 80%">{{value}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                            <v-card
+                                    variant="outlined"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                                    style="margin-bottom: 16px;"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title @click="handleHeaderIcon('response')">
+                                            <v-icon style="width: 20px; height: 20px">
+                                                {{ headerIcon.response ? 'mdi-arrow-down-bold-box' :
+                                                'mdi-arrow-right-bold-box' }}
+                                            </v-icon>
+                                            <span style="font-weight: bold">Response</span>
+                                        </v-list-item-title>
+                                        <div v-if="headerIcon.response" style="padding-top: 10px">
+                                            <div v-for="(value, key, index) in requestObject.header.response"
+                                                 :key="index">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div style="width: 20%">{{value.name}}:</div>
+                                                    <div style="width: 80%" class="header">{{value.value}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                            <v-card
+                                    variant="outlined"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title @click="handleHeaderIcon('request')">
+                                            <v-icon style="width: 20px; height: 20px">
+                                                {{ headerIcon.request ? 'mdi-arrow-down-bold-box' :
+                                                'mdi-arrow-right-bold-box' }}
+                                            </v-icon>
+                                            <span style="font-weight: bold">Request</span>
+
+                                        </v-list-item-title>
+                                        <div class="twarp" v-if="headerIcon.request"
+                                             style="padding-top: 10px;min-height: 15vh">
+                                            <div v-for="(value, key, index) in requestObject.header.request"
+                                                 :key="index">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div style="width: 20%">{{value.name}}:</div>
+                                                    <div style="width: 80%">
+                                                        {{value.value}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                        </div>
+                    </v-tabs-window-item>
+
+                    <v-tabs-window-item value="Payload">
+                        <div style="padding-bottom: 30px;">
+                            <v-card
+                                    variant="tonal"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                                    style="margin-bottom: 16px;"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title @click="handleHeaderIcon('payload')">
+                                            <v-icon style="width: 20px; height: 20px">
+                                                {{ headerIcon.payload ? 'mdi-arrow-down-bold-box' :
+                                                'mdi-arrow-right-bold-box' }}
+                                            </v-icon>
+                                            <span style="font-weight: bold">Query String Parameters</span>
+                                        </v-list-item-title>
+                                        <div class="twarp" v-if="headerIcon.payload"
+                                             style="padding-top: 10px; min-height: 15vh">
+                                            <div v-for="(value, key, index) in requestObject.payload.query"
+                                                 :key="index">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div style="width: 15%">{{value.name}}:</div>
+                                                    <div style="width: 85%">{{value.value}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                            <v-card
+                                    variant="outlined"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                                    style="margin-bottom: 16px;"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title @click="handleHeaderIcon('reqPayload')">
+                                            <v-icon style="width: 20px; height: 20px">
+                                                {{ headerIcon.reqPayload ? 'mdi-arrow-down-bold-box' :
+                                                'mdi-arrow-right-bold-box' }}
+                                            </v-icon>
+                                            <span style="font-weight: bold">Request Payload</span>
+                                        </v-list-item-title>
+                                        <div class="twarp" v-if="headerIcon.reqPayload"
+                                             style="padding-top: 10px; min-height: 30vh">
+                                            <div v-if="requestObject.payload.postData">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div>{{requestObject.payload.postData.text}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                        </div>
+                    </v-tabs-window-item>
+
+                    <v-tabs-window-item value="Preview">
+                        <div>
+                            <div v-if="!requestObject.response.content.mimeType.includes('image')">
+                                <div style="padding-bottom: 20px;" v-if="requestObject.response.content.mimeType.includes('application/json')">
+                                    <div class="output"
+                                         v-html="JSonFomat(requestObject.response.text)"></div>
+                                </div>
+                                <div v-else v-html="requestObject.response.text"></div>
+                            </div>
+                            <div v-else style="text-align: center">
+                                <img style="min-width: 6vw; min-height: 6vh;
+                                    max-width: 50vw; max-height: 50vh"
+                                     v-if="requestObject.response.text && !requestObject.response.text.startsWith('<?xml')"
+                                     :src="`data:image/png;base64,${requestObject.response.text}`"
+                                     alt="Base64 Image">
+                                <div style="max-width: 80%;" v-else v-html="requestObject.response.text"></div>
+                            </div>
+                        </div>
+                    </v-tabs-window-item>
+
+                    <v-tabs-window-item value="Response">
+                        <div style="padding-bottom: 20px">
+                            {{requestObject.response.text}}
+                        </div>
+                    </v-tabs-window-item>
+
+                    <v-tabs-window-item value="cookie">
+                        <div style="padding-bottom: 30px;">
+                            <v-card
+                                    variant="tonal"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                                    style="margin-bottom: 16px;"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title @click="handleHeaderIcon('cookie')">
+                                            <v-icon style="width: 20px; height: 20px">
+                                                {{ headerIcon.cookie ? 'mdi-arrow-down-bold-box' :
+                                                'mdi-arrow-right-bold-box' }}
+                                            </v-icon>
+                                            <span style="font-weight: bold">Request Cookie</span>
+                                        </v-list-item-title>
+                                        <div v-if="headerIcon.cookie"
+                                             style="padding-top: 10px; min-height: 15vh; max-height: 40vh"
+                                             class="header">
+                                            <div v-for="(value, key, index) in requestObject.cookie.request"
+                                                 :key="index">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div style="width: 20%">{{value.name}}:</div>
+                                                    <div style="width: 80%">{{value.value}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                            <v-card
+                                    variant="outlined"
+                                    class="mx-auto"
+                                    color="surface-variant"
+                                    style="margin-bottom: 16px;"
+                            >
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title @click="handleHeaderIcon('reqCookie')">
+                                            <v-icon style="width: 20px; height: 20px">
+                                                {{ headerIcon.cookie ? 'mdi-arrow-down-bold-box' :
+                                                'mdi-arrow-right-bold-box' }}
+                                            </v-icon>
+                                            <span style="font-weight: bold">Response cookie</span>
+                                        </v-list-item-title>
+                                        <div v-if="headerIcon.reqCookie"
+                                             style="padding-top: 10px; min-height: 30vh">
+                                            <div v-for="(value, key, index) in requestObject.cookie.response"
+                                                 :key="index">
+                                                <div class="d-flex font-weight-medium">
+                                                    <div style="width: 20%">{{value.name}}:</div>
+                                                    <div style="width: 80%">{{value.value}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-card>
+                        </div>
+                    </v-tabs-window-item>
+
+                </v-tabs-window>
+            </v-card-text>
+        </v-card>
+
+    </v-dialog>
+    <v-card flat>
+        <v-layout>
+            <v-navigation-drawer
+                    v-model="drawer"
+                    :rail="rail"
+                    permanent
+                    @click="rail = false"
+                    theme="dark"
+            >
+                <v-list-item prepend-icon="mdi-peace" title="" size="large" color="green">
+                    <template v-slot:append>
+                        <v-btn
+                                variant="text"
+                                icon="mdi-chevron-left"
+                                @click.stop="rail = !rail"
+                        ></v-btn>
+                    </template>
+                </v-list-item>
+                <v-list nav>
+                    <v-list-item
+                            prepend-icon="mdi-spider-web"
+                            title="网络"
+                            @click="changeTab('NetWork')"
+                    ></v-list-item>
+                    <v-list-item
+                            prepend-icon="mdi mdi-toolbox"
+                            title="工具箱"
+                            @click="changeTab('ToolBox')"
+                    ></v-list-item>
+                </v-list>
+
+            </v-navigation-drawer>
+
+            <v-app-bar title="SpiderCrawl">
+                <template v-slot:prepend>
+                    <v-tooltip text="Running" v-if="spiderSwitch" location="bottom">
+                        <template v-slot:activator="{ props }">
+                            <v-icon v-bind="props" icon="mdi mdi-adjust" size="large" color="green" @click="resetDb"></v-icon>
+                        </template>
+                    </v-tooltip>
+                    <v-tooltip text="Stop" v-else location="bottom">
+                        <template v-slot:activator="{ props }">
+                            <v-icon v-bind="props" icon="mdi mdi-adjust" size="large" color="red" @click="resetDb"></v-icon>
+                        </template>
+                    </v-tooltip>
+                </template>
+                <template v-slot:append>
+                    <v-switch
+                            v-model="spiderSwitch"
+                            color="secondary"
+                            :label="spiderSwitch ? 'close' : 'open'"
+                            hide-details
+                            @click="spiderSwitchChange"
+                    ></v-switch>
+                </template>
+            </v-app-bar>
+            <v-main>
+                <v-card>
+                    <v-card-text>
+                        <v-tabs-window v-model="tab">
+                            <v-tabs-window-item value="NetWork">
+                                <div class="d-flex mb-6" style="margin-bottom: 0px!important;">
+                                    <v-sheet class="me-auto d-flex">
+                                        <v-checkbox
+                                                v-for="(item, index) in spiderCheckbox"
+                                                :key="index"
+                                                v-model="item.value"
+                                                color="primary"
+                                                :label="item.label"
+                                                hide-details
+                                                @update:focused="handleCheckbox"
+                                        ></v-checkbox>
+                                    </v-sheet>
+                                    <v-sheet class="d-flex ga-2">
+                                        <v-btn prepend-icon="mdi mdi-refresh-circle" color="green" @click="openDB">
+                                            刷新
+                                        </v-btn>
+
+                                        <v-btn prepend-icon="mdi mdi-delete-circle"
+                                               :color="selected.length > 0 ? 'green': 'error'"
+                                               @click="deleteData">
+                                            {{ selected.length > 0 ? '删除选中': '删除全部'}}
+                                        </v-btn>
+                                    </v-sheet>
+                                </div>
+                                <v-card>
+                                    <template v-slot:text>
+                                        <div class="d-flex ga-5">
+                                            <v-text-field
+                                                    v-model="search"
+                                                    label="Search"
+                                                    prepend-inner-icon="mdi-magnify"
+                                                    variant="outlined"
+                                                    hide-details
+                                                    single-line>
+                                            </v-text-field>
+                                            <div style="display: flex;justify-content: center; align-items: center; ">
+                                                <v-btn icon="mdi-magnify" variant="outlined" size="small"
+                                                       @click="openDB"/>
+                                            </div>
+                                        </div>
+
+                                    </template>
+                                    <!--:search="search"-->
+                                    <v-data-table
+                                            v-model="selected"
+                                            :headers="headers"
+                                            :items="NetWorkData"
+                                            show-select
+                                            item-value="id"
+                                            fixed-header
+                                            hover
+                                            style="max-height: 88vh"
+                                            :sort-by="[{ key: 'start', order: 'asc' }]"
+                                            @click:row="rowClicked"
+                                    >
+                                        <template #item.code="{item}">
+                                            <div class="d-flex flex-row ">
+                                                <v-icon :icon="getIcon(item)"
+                                                        :color="getColor(item)"></v-icon>
+                                                {{ item.code }}
+                                            </div>
+                                        </template>
+                                        <template #item.time="{item}">
+                                            {{ formatTime(item) }}
+                                        </template>
+                                        <template #item.url="{item}">
+                                            <div style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                                                <v-tooltip :text="item.url" location="bottom">
+                                                    <template v-slot:activator="{ props }">
+                                                        <p v-bind="props">{{ item.url }}</p>
+                                                    </template>
+                                                </v-tooltip>
+                                            </div>
+                                        </template>
+                                        <template #item.type="{item}">
+
+                                            <div v-if="item.type=='image'">
+                                                <img style="max-width: 80px; max-height: 100px;"
+                                                     v-if="item.content && !item.content.startsWith('<?xml')"
+                                                     :src="`data:image/png;base64,${item.content}`"
+                                                     alt="Base64 Image">
+                                                <div style="max-width: 80px;" v-else v-html="item.content"></div>
+                                            </div>
+                                            <div v-else>
+                                                {{ item.type }}
+                                            </div>
+                                        </template>
+                                        <template
+                                                v-slot:header.data-table-select="{ allSelected, selectAll, someSelected }">
+                                            <v-checkbox-btn
+                                                    :indeterminate="someSelected && !allSelected"
+                                                    :model-value="allSelected"
+                                                    color="primary"
+                                                    @update:model-value="selectAll(!allSelected)"
+                                            ></v-checkbox-btn>
+                                        </template>
+
+                                        <template
+                                                v-slot:item.data-table-select="{ internalItem, isSelected, toggleSelect }">
+                                            <v-checkbox-btn
+                                                    :model-value="isSelected(internalItem)"
+                                                    color="primary"
+                                                    @update:model-value="toggleSelect(internalItem)"
+                                            ></v-checkbox-btn>
+                                        </template>
+                                    </v-data-table>
+                                </v-card>
+                            </v-tabs-window-item>
+
+                            <v-tabs-window-item value="ToolBox">
+                                <v-tabs
+                                        next-icon="mdi-arrow-right-bold-box-outline"
+                                        prev-icon="mdi-arrow-left-bold-box-outline"
+                                        show-arrows
+                                        v-model="ToolBoxTab"
+                                >
+                                    <v-tab style="text-transform: none !important;" :key="ToolBoxCookie"
+                                           text="格式化"></v-tab>
+                                    <v-tab style="text-transform: none !important;" :key="ToolBoxPdf"
+                                           text="Base64转Pdf"></v-tab>
+                                    <v-tab style="text-transform: none !important;" :key="ToolBoxHtml"
+                                           text="Html渲染"></v-tab>
+                                    <v-tab style="text-transform: none !important;" :key="ToolBoxCurl"
+                                           text="curl转python"></v-tab>
+                                </v-tabs>
+                                <v-tabs-window v-model="ToolBoxTab">
+                                    <v-tabs-window-item value="ToolBoxFormat">
+                                        <div class="d-flex mb-6" style="margin-bottom: 0px!important;">
+                                            <v-sheet class="ma-2 pa-2 me-auto d-flex">
+                                                <v-select label="格式化类型" :items="['Cookie', 'Header', 'JSon']"
+                                                          style="min-width: 500px"
+                                                          v-model="FormatValue" style="padding-top: 10px"
+                                                          @update:model-value="UpdateInFormat"></v-select>
+                                            </v-sheet>
+                                            <v-sheet class="ma-2 pa-2 d-flex ga-3">
+                                                <v-btn class="copy-button" @click="copyToClipboard">复制 JSON</v-btn>
+                                                <v-btn class="copy-button" @click="copyToCStr">复制 字符串</v-btn>
+                                                <v-btn class="copy-button" @click="copyToCys">压缩</v-btn>
+                                            </v-sheet>
+                                        </div>
+                                        <v-row class="row" style="height: calc(90vh - 5%)">
+                                            <v-col cols="6" class="col">
+                                                <v-textarea :label="textLabel.a" class="full-height" rows="23"
+                                                            v-model="FormatInput" @input="UpdateInFormat"
+                                                            variant="outlined" clearable
+                                                ></v-textarea>
+                                            </v-col>
+
+                                            <v-col cols="6" class="col" style="overflow-y: auto">
+                                                <div style="height: 400px;">
+                                                    <div class="output" style="height: 600px;"
+                                                         v-html="FormatOutput"></div>
+                                                </div>
+                                            </v-col>
+                                        </v-row>
+                                    </v-tabs-window-item>
+                                    <v-tabs-window-item value="ToolBoxPdf">
+                                        <v-container fill-height fluid>
+                                            <v-row align="center" justify="center">
+                                                <v-col cols="12" sm="10" md="11">
+                                                    <v-textarea
+                                                            clearable
+                                                            clear-icon="mdi-close-circle"
+                                                            label="请输入base64字符"
+                                                            v-model="pdfData"
+                                                            @input="pdfPreview"
+                                                            rows="5"
+                                                            variant="outlined"
+                                                    ></v-textarea>
+                                                </v-col>
+                                                <p><a :href="pdfPreviewUrl" target="_blank">点击此处全屏查看</a></p>
+                                            </v-row>
+                                        </v-container>
+                                        <div style="  display: flex;
+                                                      justify-content: center; /* 水平居中对齐 */
+                                                      align-items: center; /* 垂直居中对齐 */
+                                                      padding-bottom: 5%;
+                                                      padding-top: 1%;">
+                                            <iframe
+                                                    :src="pdfPreviewUrl"
+                                                    width="90%"
+                                                    height="700vh"
+                                                    frameborder="0"
+                                            ></iframe>
+                                        </div>
+                                    </v-tabs-window-item>
+                                    <v-tabs-window-item value="ToolBoxHtml">
+                                        <v-container fill-height fluid>
+                                            <v-row align="center" justify="center">
+                                                <v-col cols="12" sm="10" md="11">
+                                                    <v-textarea
+                                                            clearable
+                                                            clear-icon="mdi-close-circle"
+                                                            label="请输入Html字符"
+                                                            v-model="htmlStr"
+                                                            @input="handleHtml"
+                                                            rows="5"
+                                                            variant="outlined"
+                                                    ></v-textarea>
+                                                </v-col>
+                                            </v-row>
+                                        </v-container>
+                                        <v-card style="
+                                                      display: flex;
+                                                      justify-content: center; /* 水平居中对齐 */
+                                                      align-items: center; /* 垂直居中对齐 */
+                                                      padding-bottom: 5%;
+                                                      padding-top: 5%;
+                                                      padding-left: 5%;
+                                                      padding-right: 5%;
+                                                      overflow-x: auto; /* 启用横向滚动条 */
+                                                      overflow-y: auto; /* 启用横向滚动条 */
+                                                      white-space: nowrap; /* 防止内容换行 */
+                                                      width: 100%;
+                                                      max-height: 100vh;
+                                                        ">
+                                            <div
+                                                    style="width: 99%;"
+                                                    v-html="htmlStr"
+                                            ></div>
+                                        </v-card>
+                                    </v-tabs-window-item>
+                                    <v-tabs-window-item value="ToolBoxCurl">
+                                        <v-row class="row" style="height: calc(90vh - 5%); padding-top: 20px">
+                                            <v-col cols="6" class="col">
+                                                <v-textarea :label="textLabel.a" class="full-height" rows="23"
+                                                            v-model="curlString" @input="handleCurl"
+                                                            variant="outlined" clearable
+                                                ></v-textarea>
+                                            </v-col>
+
+                                            <v-col cols="6" class="col" style="overflow-y: auto">
+                                                <div class="output" style="max-height: 600px;" v-html="curlPyString">
+                                                </div>
+                                            </v-col>
+                                        </v-row>
+                                    </v-tabs-window-item>
+                                </v-tabs-window>
+                            </v-tabs-window-item>
+
+                            <v-tabs-window-item value="three">
+                                Three
+                            </v-tabs-window-item>
+                        </v-tabs-window>
+                    </v-card-text>
+                </v-card>
+            </v-main>
+        </v-layout>
+    </v-card>
+</div>
+<script type="text/javascript" src="js/vue/curlToPy.js"></script>
+<script src="js/vue/vue3.js"></script>
+<script src="/js/vuetify/index.js"></script>
+<script type="text/javascript" src="js/vue/index.js"></script>
+</body>
+</html>
