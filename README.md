@@ -43,7 +43,7 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 - 新增报文、请求参数、响应内容复制功能
 
 # 贡献
-- 感谢
+- 感谢 Github 的 fuce1314 用户提出优化建议
 
 
 # 问题
