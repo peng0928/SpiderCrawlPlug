@@ -14,6 +14,19 @@ chrome.storage.local.get('spiderSwitch', function (result) {
         listeningCrawl.style.display = 'none';
     }
 });
+$("#openCheck").click((e) => {
+    var isChecked = $("#exampleCheck1").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({spiderSwitch: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({spiderSwitch: true}, function () {
+        });
+    }
+    window.location.reload();
+
+});
+
 
 function testBackground() {
     alert("你好，我是background！");
@@ -320,17 +333,47 @@ function GeneralModalBody(Data) {
     <div style="display: flex;align-items: center;">
     <div style="min-width: 20%;">Request URL:</div> <div style="color: blue"> ${Data.request.url}</div></div>
     <div style="display: flex;align-items: center;">
-    <div style="min-width: 20%;">Request MethodL:</div><div style="color: red"> ${Data.request.method}</div></div>
+    <div style="min-width: 20%;">Request Method:</div><div style="color: red"> ${Data.request.method}</div></div>
     <div style="display: flex;align-items: center;">
     <div style="min-width: 20%;">Status Code:</div> <div style="color: green"> ${Data.response.status}</div></div>
   `;
+    var item = JSON.stringify({
+        url: Data.request.url,
+        method: Data.request.method,
+        status: Data.response.status
+    })
+    CopyButton(ModalBody, Data, item, 'General')
+
+}
+
+function CopyButton(ModalBody, Data, item, name, btName = '复制') {
+    var uniqueId = name + Data.id;
+    ModalBody.innerHTML += `<div style="padding-right: 10px"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right;" id="${uniqueId}">${btName}</button></div>`;
+    var copyButton = document.getElementById(uniqueId);
+    copyButton.addEventListener('click', function () {
+        copyText(item, name);
+    });
 }
 
 function ResponseModalBody(Data) {
     PreviewModalBody(Data);
-    ActionModalBody(Data)
+    ActionModalBody(Data);
     var ModalBody = document.getElementById("ResponseModalBody");
-    ModalBody.textContent = Data.content || "";
+    ModalBody.innerHTML = "";
+    ModalBody.innerHTML += `
+    <div style="padding-right: 10px"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right" id="ResponseText${Data.id}">复制</button></div>
+    <div id='Response_${Data.id}'></div>    
+    `;
+    document.getElementById(`ResponseText${Data.id}`).addEventListener('click', function () {
+        copyText(Data.content, 'ResponseText');
+    });
+    // ModalBody.textContent += Data.content || "";
+    var spanElement = document.getElementById(`Response_${Data.id}`);
+    // 如果找到了该元素，将其内容转换为纯文本
+    if (spanElement) {
+        spanElement.textContent = Data.content;
+    }
+
 }
 
 function ActionModalBody(Data) {
@@ -388,57 +431,102 @@ function PreviewModalBody(Data) {
 function ParamsModalBody(Data) {
     var ParamsBody = document.getElementById("ParamsModalBody");
     var DataBody = document.getElementById("DataModalBody");
-    ParamsBody.textContent = ""
+    ParamsBody.innerHTML = ""
     DataBody.textContent = ""
+    var Params = ""
     try {
-        ParamsBody.textContent = param_to_string(Data.request.queryString);
+        Params = param_to_string(Data.request.queryString)
+        ParamsBody.innerHTML = Params;
     } catch (error) {
         console.error("Error parsing JSON:", error);
+    }
+    var parentDiv = document.getElementsByName("DataModalBody")[0]; // 获取元素
+    if (parentDiv) {
+        parentDiv.remove();
     }
     try {
         var htmlString = Data.request.postData.text;
         try {
             var jsonData = JSON.parse(htmlString);
             jsoneditorApi(jsonData, 'DataModalBody')
+
+            document.getElementById("DataModalBody").insertAdjacentHTML('beforebegin', `
+                <div style="padding-right: 10px;" name="DataModalBody"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right;" id="DataDictBody${Data.id}">复制Dict</button></div>
+            `);
+            document.getElementById(`DataDictBody${Data.id}`).addEventListener('click', function () {
+                copyText(JSON.stringify(jsonData), 'Data');
+            });
+
         } catch {
             DataBody.textContent = htmlString;
+                 document.getElementById("DataModalBody").insertAdjacentHTML('beforebegin', `
+                <div style="padding-right: 10px;" name="DataModalBody"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right;" id="DataDictBody${Data.id}">复制</button></div>
+            `);
+            document.getElementById(`DataDictBody${Data.id}`).addEventListener('click', function () {
+                copyText(htmlString, 'Data');
+            });
         }
     } catch {
     }
+    ParamsBody.innerHTML += `
+    <div style="padding-right: 10px"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right;" id="ParamsDict${Data.id}">复制Dict</button></div>
+    <div style="padding-right: 10px"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right;" id="ParamsStr${Data.id}">复制字符串</button></div>
+    `;
+    document.getElementById(`ParamsStr${Data.id}`).addEventListener('click', function () {
+        copyText(Params, 'Params');
+    });
+    const ParamsDict = new URLSearchParams(Params);
+    const result = {};
+    for (const [key, value] of ParamsDict) {
+        result[key] = value;
+    }
+    document.getElementById(`ParamsDict${Data.id}`).addEventListener('click', function () {
+        copyText(JSON.stringify(result), 'ParamsDict');
+    });
 }
 
 function HeadersModel(Data) {
     var ModalBody = document.getElementById("HeadersModalBody");
     ModalBody.innerHTML = "";
+    var queryDict = {}
     Data.forEach((item, index) => {
+        queryDict[item.name] = item.value;
         ModalBody.appendChild(document.createElement("div")).innerHTML = `
-    <div style="
-    display: flex;
-    align-items: center;
-    font-size: 13px;
-    ">
-      <div style="min-width: 20%;">${item.name.replace(/^:/, "")}:</div>
-      <div>${item.value}</div>
-    </div>
-    `;
+            <div style="
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            ">
+              <div style="min-width: 20%;">${item.name.replace(/^:/, "")}:</div>
+              <div>${item.value}</div>
+            </div>
+            `;
     });
+    queryDict = JSON.stringify(queryDict)
+    CopyButton(ModalBody, Data, queryDict, 'Request Headers')
 }
 
 function RespHeadersModel(Data) {
     var ModalBody = document.getElementById("RespHeadersModalBody");
     ModalBody.innerHTML = "";
+    var queryDict = {}
     Data.forEach((item, index) => {
+        queryDict[item.name] = item.value;
         ModalBody.appendChild(document.createElement("div")).innerHTML = `
-    <div style="
-    display: flex;
-    align-items: center;
-    font-size: 13px;
-    ">
-      <div style="min-width: 20%;">${item.name.replace(/^:/, "")}:</div>
-      <div>${item.value}</div>
-    </div>
+             <div style="
+                display: flex;
+                align-items: center;
+                font-size: 13px;
+            ">
+              <div style="min-width: 20%;">${item.name}:</div>
+              <div>${item.value}</div>
+            </div>
     `;
     });
+    queryDict = JSON.stringify(queryDict)
+    CopyButton(ModalBody, Data, queryDict, 'Response Headers')
+
+
 }
 
 function extractDomain(url) {
@@ -685,10 +773,20 @@ function curlApi(request) {
 //     headers: cursor.value.request.headers,
 //     body: bodydata,
 // })
-function copyApi(e) {
+function copyApi(e, i = 'Curl') {
     console.log(e)
     // 获取toast的引用
-    Toast('Curl', '复制成功')
+    Toast(i, '复制成功')
+    navigator.clipboard.writeText(e).then(function () {
+        console.log('Text copied to clipboard');
+    }, function (err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+function copyText(e, i = '') {
+    // 获取toast的引用
+    Toast(i, '复制成功')
     navigator.clipboard.writeText(e).then(function () {
         console.log('Text copied to clipboard');
     }, function (err) {
@@ -705,23 +803,23 @@ function Toast(title = "", content = "") {
 }
 
 
-document.addEventListener('DOMContentLoaded', function () {
-    var link = document.getElementById('sponsorLink');
-    var qrcode = document.getElementById('qrcode');
-
-    link.addEventListener('mouseover', function (event) {
-        // 显示二维码
-        qrcode.style.display = 'block';
-        // 设置二维码的位置，可以根据实际情况调整
-        qrcode.style.left = event.pageX + 'px';
-        qrcode.style.top = event.pageY + 'px';
-    });
-
-    link.addEventListener('mouseout', function () {
-        // 隐藏二维码
-        qrcode.style.display = 'none';
-    });
-});
+// document.addEventListener('DOMContentLoaded', function () {
+//     var link = document.getElementById('sponsorLink');
+//     var qrcode = document.getElementById('qrcode');
+//
+//     link.addEventListener('mouseover', function (event) {
+//         // 显示二维码
+//         qrcode.style.display = 'block';
+//         // 设置二维码的位置，可以根据实际情况调整
+//         qrcode.style.left = event.pageX + 'px';
+//         qrcode.style.top = event.pageY + 'px';
+//     });
+//
+//     link.addEventListener('mouseout', function () {
+//         // 隐藏二维码
+//         qrcode.style.display = 'none';
+//     });
+// });
 
 function del_one_data(pid) {
     const request = indexedDB.open("myDatabase", db_version);

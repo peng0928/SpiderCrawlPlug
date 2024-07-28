@@ -37,6 +37,12 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 ## 4.2 工具箱
 ![img_3.png](img/img_3.png)
 
+# 5.更新日志
+## V1.0.0
+- 新增页面抓包开关控制
+- 新增报文、请求参数、响应内容复制功能
+
+
 
 # 问题
 

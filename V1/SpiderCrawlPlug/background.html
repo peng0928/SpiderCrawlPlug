@@ -37,9 +37,16 @@
         <span style="color: red;display:none" id="listeningCrawl">正在监听中...</span>
         <span style="color: gray;display:none" id="listeningStop">暂停监听中...</span>
         <div class="navbar-nav flex-row justify-content-end ml-auto">
+            <div style="padding-top: 8px">
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                    <label class="form-check-label" for="exampleCheck1" id="openCheck">开启监听</label>
+                </div>
+            </div>
             <a class="nav-item nav-link" href="https://github.com/peng0928/SpiderCrawlPlug/issues" target="_blank"
                style="font-size: 15px;">给作者提Bug!</a>
-            <a class="nav-item nav-link" href="#" id="sponsorLink" style="font-size: 15px;">感谢大佬们赞助!</a>
+            <!--            <a class="nav-item nav-link" href="#" id="sponsorLink" style="font-size: 15px;">感谢大佬们赞助!</a>-->
+
             <div id="qrcode" style="display: none; position: absolute; z-index: 1000;">
                 <img src="./img/payme.jpg" alt="二维码" style="width: 200px; height: 300px;"/>
             </div>
@@ -320,7 +327,7 @@
                             <i class="bi bi-send"></i>
                             Data
                         </div>
-                        <div id="DataModalBody" style="height: 600px; padding-bottom: 30px; padding-top: 10px">
+                        <div id="DataModalBody" style="height: 600px; padding-bottom: 30px; padding-top: 35px">
                             <div style="height: 400px;"></div>
                         </div>
                     </div>
