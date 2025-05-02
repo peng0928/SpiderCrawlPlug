@@ -7,12 +7,12 @@ cardHeader.addEventListener('click', () => {
     isExpanded = !isExpanded;
 
     if (isExpanded) {
-        cardContent.style.maxHeight = cardContent.scrollHeight + 'px';
-        cardContent.style.opacity = '1';
-        toggleIcon.style.transform = 'rotate(180deg)';
-    } else {
         cardContent.style.maxHeight = '0';
         cardContent.style.opacity = '0';
+        toggleIcon.style.transform = 'rotate(180deg)';
+    } else {
+        cardContent.style.maxHeight = cardContent.scrollHeight + 'px';
+        cardContent.style.opacity = '1';
         toggleIcon.style.transform = 'rotate(0deg)';
     }
 });
