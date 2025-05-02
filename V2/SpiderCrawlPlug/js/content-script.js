@@ -46,7 +46,7 @@ function injectHook(chrome) {
                 isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
-                console.error('%c错误:', 'color: #F44336; font-weight: bold', error);
+                console.log('%c错误:', 'color: #F44336; font-weight: bold', error);
                 throw error;
             }
         },
@@ -61,10 +61,10 @@ function injectHook(chrome) {
             isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', value);
             try {
                 const result = this.originalStringify.call(this, value, replacer, space);
-                console.log('%c结果: %c', 'color: #2196F3; font-weight: bold',result);
+                console.log('%c结果: ', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
-                console.error('%c错误:', 'color: #F44336; font-weight: bold', error);
+                console.log('%c错误:', 'color: #F44336; font-weight: bold', error);
                 throw error;
             }
         },
