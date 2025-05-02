@@ -1,3 +1,37 @@
+
+const cardHeader = document.getElementById('cardHeader');
+const cardContent = document.getElementById('cardContent');
+const toggleIcon = document.getElementById('toggleIcon');
+let isExpanded = false;
+cardHeader.addEventListener('click', () => {
+    isExpanded = !isExpanded;
+
+    if (isExpanded) {
+        cardContent.style.maxHeight = cardContent.scrollHeight + 'px';
+        cardContent.style.opacity = '1';
+        toggleIcon.style.transform = 'rotate(180deg)';
+    } else {
+        cardContent.style.maxHeight = '0';
+        cardContent.style.opacity = '0';
+        toggleIcon.style.transform = 'rotate(0deg)';
+    }
+});
+
+const inputElement = document.getElementById('HookInput');
+
+// 保存到存储
+inputElement.addEventListener('change', () => {
+ localStorage.setItem('HookInput', inputElement.value);
+  chrome.storage.local.set({HookInput: inputElement.value}, () => {
+    console.log('Value is set');
+  });
+});
+
+chrome.storage.local.get(['HookInput'], (result) => {
+  if (result.HookInput) {
+    inputElement.value = result.HookInput;
+  }
+});
 console.log("background");
 let dataflag = true;
 let dataType = null;

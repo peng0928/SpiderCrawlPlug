@@ -22,6 +22,21 @@ chrome.storage.local.get('spiderSwitch', function (result) {
     }
 
 });
+
+chrome.storage.local.get('hookJson', function (result) {
+    result = result.hookJson;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookJson').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookJson').checked = false;
+        }
+    } catch {
+    }
+
+});
 $("#openCheck").click((e) => {
     // 获取复选框的选中状态
     var isChecked = $("#exampleCheck1").prop('checked');
@@ -30,6 +45,18 @@ $("#openCheck").click((e) => {
         });
     } else {
         chrome.storage.local.set({spiderSwitch: true}, function () {
+        });
+    }
+
+});
+$("#BhookJson").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookJson").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookJson: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookJson: true}, function () {
         });
     }
 
