@@ -4,28 +4,25 @@
         console.log("------------------正在监听网络请求------------------");
     }
 });
-let HookInput = "";
- chrome.storage.local.get(['HookInput'], (result) => {
-    HookInput =  result;
-})
 
-chrome.storage.local.get('hookJson', function (result) {
-    result = result.hookJson;
-    if (result) {
+chrome.storage.local.get(['hookJson', 'HookInput'], function (result) {
+    hookJson = result.hookJson;
+    HookInput = String(result.HookInput);
+    if (hookJson) {
         console.log("------------------hookJson------------------");
         // 确保DOM加载后注入
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', injectHook);
+            document.addEventListener('DOMContentLoaded', injectHook(HookInput));
         } else {
-            injectHook(chrome);
+            injectHook(HookInput);
         }
     }
 });
 
-function injectHook(chrome) {
+function injectHook(e) {
     const script = document.createElement('script');
     script.textContent = `
-    function HJSOn(chrome) {
+    function HJSOn(e) {
     const jsonHooks = {
         originalParse: JSON.parse,
         originalStringify: JSON.stringify,
@@ -36,11 +33,15 @@ function injectHook(chrome) {
             if (!this.enabled || this.logLevel === 'none') {
                 return this.originalParse.call(this, text, reviver);
             }
-
             const isVerbose = this.logLevel === 'verbose';
             isVerbose && console.log('%c[JSON.parse]', 'color: #4CAF50; font-weight: bold');
             isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', text);
-
+            console.log('jsonHooks',e)
+            if (e){
+                if (text.includes(e)){
+                    debugger;
+                }
+            }
             try {
                 const result = this.originalParse.call(this, text, reviver);
                 isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
@@ -60,7 +61,13 @@ function injectHook(chrome) {
             isVerbose && console.log('%c[JSON.stringify]', 'color: #4CAF50; font-weight: bold');
             isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', value);
             try {
+
                 const result = this.originalStringify.call(this, value, replacer, space);
+                 if (e){
+                if (result.includes(e)){
+                    debugger;
+                    }
+                }
                 console.log('%c结果: ', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
@@ -104,7 +111,7 @@ function injectHook(chrome) {
     console.log('%cJSONHooks.setLogLevel("verbose"|"minimal"|"none") - 设置日志级别', 'color: #9C27B0;');
     console.log('%cJSONHooks.restore() - 恢复原始方法', 'color: #9C27B0;');
     };
-    HJSOn(chrome);
+    HJSOn('${e}');
     `;
     document.documentElement.appendChild(script);
     script.remove();
