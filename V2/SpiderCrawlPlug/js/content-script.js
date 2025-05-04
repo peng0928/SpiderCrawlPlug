@@ -5,21 +5,25 @@
     }
 });
 
-chrome.storage.local.get(['hookJson', 'HookInput'], function (result) {
+chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl'], function (result) {
     hookJson = result.hookJson;
     HookInput = String(result.HookInput);
+    hookUrl = result.hookUrl;
     if (hookJson) {
-        console.log("------------------hookJson------------------");
         // 确保DOM加载后注入
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', injectHook(HookInput));
+            document.addEventListener('DOMContentLoaded', injectHookJson(HookInput));
         } else {
-            injectHook(HookInput);
+            injectHookJson(HookInput);
         }
+    }
+    if (hookUrl) {
+        // 确保DOM加载后注入
+        document.addEventListener('DOMContentLoaded', injectHookUrl(HookInput));
     }
 });
 
-function injectHook(e) {
+function injectHookJson(e) {
     const script = document.createElement('script');
     script.textContent = `
     function HJSOn(e) {
@@ -31,23 +35,23 @@ function injectHook(e) {
 
         parse: function (text, reviver) {
             if (!this.enabled || this.logLevel === 'none') {
-                return this.originalParse.call(this, text, reviver);
+                return this.originalParse.call(this, text);
             }
             const isVerbose = this.logLevel === 'verbose';
             isVerbose && console.log('%c[JSON.parse]', 'color: #4CAF50; font-weight: bold');
             isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', text);
-            console.log('jsonHooks',e)
             if (e){
                 if (text.includes(e)){
                     debugger;
                 }
             }
             try {
-                const result = this.originalParse.call(this, text, reviver);
+                const result = this.originalParse.call(this, text);
                 isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
-                console.log('%c错误:', 'color: #F44336; font-weight: bold', error);
+                console.log('%c错误:', 'color: #F44336; font-weight: bold');
+                console.log(error);
                 throw error;
             }
         },
@@ -117,3 +121,242 @@ function injectHook(e) {
     script.remove();
 }
 
+function injectHookUrl(e) {
+  const script = document.createElement('script');
+  script.textContent = `
+  function Hook(e) {
+  const urlHooks = {
+    original: {
+      encodeURI: encodeURI,
+      encodeURIComponent: encodeURIComponent,
+      decodeURI: decodeURI,
+      decodeURIComponent: decodeURIComponent,
+      escape: escape,
+      unescape: unescape
+    },
+
+    enabled: true,
+    logLevel: 'verbose', // 'verbose' | 'minimal' | 'none'
+    warnDeprecated: true,
+
+    encodeURI: function(uri) {
+      if (!this.enabled || this.logLevel === 'none') {
+        return this.original.encodeURI.call(this, uri);
+      }
+
+      const isVerbose = this.logLevel === 'verbose';
+      isVerbose && console.log('%c[encodeURI] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', uri);
+
+      try {
+        const startTime = performance.now();
+        const result = this.original.encodeURI.call(this, uri);
+        const endTime = performance.now();
+        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+         if (e){
+                if (uri.includes(e) && result.includes(e)){
+                    debugger;
+                }
+            }
+        return result;
+      } catch (error) {
+        console.error('%c失败!', 'color: #F44336; font-weight: bold');
+        console.error('%c错误:', 'color: #F44336; font-weight: bold', error.message);
+        throw error;
+      }
+    },
+
+    encodeURIComponent: function(component) {
+      if (!this.enabled || this.logLevel === 'none') {
+        return this.original.encodeURIComponent.call(this, component);
+      }
+
+      const isVerbose = this.logLevel === 'verbose';
+      isVerbose && console.log('%c[encodeURIComponent] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', component);
+
+      try {
+        const startTime = performance.now();
+        const result = this.original.encodeURIComponent.call(this, component);
+        const endTime = performance.now();
+        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        if (e){
+                if (String(component).includes(e) && result.includes(e)){
+                    debugger;
+                }
+            }
+        return result;
+      } catch (error) {
+        console.error('%c失败!', 'color: #F44336; font-weight: bold');
+        console.error('%c错误:', 'color: #F44336; font-weight: bold', error.message);
+        throw error;
+      }
+    },
+
+    decodeURI: function(encodedURI) {
+      if (!this.enabled || this.logLevel === 'none') {
+        return this.original.decodeURI.call(this, encodedURI);
+      }
+
+      const isVerbose = this.logLevel === 'verbose';
+      isVerbose && console.log('%c[decodeURI] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', encodedURI);
+
+      try {
+        const startTime = performance.now();
+        const result = this.original.decodeURI.call(this, encodedURI);
+        const endTime = performance.now();
+        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        if (e){
+                if (encodedURI.includes(e) && result.includes(e)){
+                    debugger;
+                }
+            }
+        return result;
+      } catch (error) {
+        console.error('%c失败!', 'color: #F44336; font-weight: bold');
+        console.error('%c错误:', 'color: #F44336; font-weight: bold', error.message);
+        throw error;
+      }
+    },
+
+    decodeURIComponent: function(encodedComponent) {
+      if (!this.enabled || this.logLevel === 'none') {
+        return this.original.decodeURIComponent.call(this, encodedComponent);
+      }
+
+      const isVerbose = this.logLevel === 'verbose';
+      isVerbose && console.log('%c[decodeURIComponent] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', encodedComponent);
+
+      try {
+        const startTime = performance.now();
+        const result = this.original.decodeURIComponent.call(this, encodedComponent);
+        const endTime = performance.now();
+        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        if (e){
+                if (encodedComponent.includes(e) && result.includes(e)){
+                    debugger;
+                }
+            }
+        return result;
+      } catch (error) {
+        console.error('%c失败!', 'color: #F44336; font-weight: bold');
+        console.error('%c错误:', 'color: #F44336; font-weight: bold', error.message);
+        throw error;
+      }
+    },
+
+    escape: function(str) {
+      if (!this.enabled || this.logLevel === 'none') {
+        return this.original.escape.call(this, str);
+      }
+
+      if (this.warnDeprecated) {
+        console.warn('%c警告: escape() 已弃用，请使用 encodeURIComponent()',
+                     'color: #FF9800; font-weight: bold');
+      }
+
+      const isVerbose = this.logLevel === 'verbose';
+      isVerbose && console.log('%c[escape] 开始转义', 'color: #4CAF50; font-weight: bold');
+      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', str);
+
+      try {
+        const startTime = performance.now();
+        const result = this.original.escape.call(this, str);
+        const endTime = performance.now();
+        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+           if (e){
+                if (str.includes(e) && result.includes(e)){
+                    debugger;
+                }
+            }
+        return result;
+      } catch (error) {
+        console.error('%c失败!', 'color: #F44336; font-weight: bold');
+        console.error('%c错误:', 'color: #F44336; font-weight: bold', error.message);
+        throw error;
+      }
+    },
+
+    unescape: function(str) {
+      if (!this.enabled || this.logLevel === 'none') {
+        return this.original.unescape.call(this, str);
+      }
+
+      if (this.warnDeprecated) {
+        console.warn('%c警告: unescape() 已弃用，请使用 decodeURIComponent()',
+                     'color: #FF9800; font-weight: bold');
+      }
+
+      const isVerbose = this.logLevel === 'verbose';
+      isVerbose && console.log('%c[unescape] 开始反转义', 'color: #4CAF50; font-weight: bold');
+      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', str);
+
+      try {
+        const startTime = performance.now();
+        const result = this.original.unescape.call(this, str);
+        const endTime = performance.now();
+        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        if (e){
+                if (str.includes(e) && result.includes(e)){
+                    debugger;
+                }
+            }
+        return result;
+      } catch (error) {
+        console.error('%c失败!', 'color: #F44336; font-weight: bold');
+        console.error('%c错误:', 'color: #F44336; font-weight: bold', error.message);
+        throw error;
+      } 
+    },
+
+    enable: function() {
+      this.enabled = true;
+      console.log('%cURL Hooks 已启用', 'color: #4CAF50; font-weight: bold');
+    },
+
+    disable: function() {
+      this.enabled = false;
+      console.log('%cURL Hooks 已禁用', 'color: #F44336; font-weight: bold');
+    },
+
+    setLogLevel: function(level) {
+      this.logLevel = level;
+    },
+
+    toggleDeprecationWarnings: function(enable) {
+      this.warnDeprecated = enable;
+    },
+
+    restore: function() {
+      encodeURI = this.original.encodeURI;
+      encodeURIComponent = this.original.encodeURIComponent;
+      decodeURI = this.original.decodeURI;
+      decodeURIComponent = this.original.decodeURIComponent;
+      escape = this.original.escape;
+      unescape = this.original.unescape;
+      console.log('%c已恢复原始 URL 方法', 'color: #4CAF50; font-weight: bold');
+    }
+  };
+  encodeURI = urlHooks.encodeURI.bind(urlHooks);
+  encodeURIComponent = urlHooks.encodeURIComponent.bind(urlHooks);
+  decodeURI = urlHooks.decodeURI.bind(urlHooks);
+  decodeURIComponent = urlHooks.decodeURIComponent.bind(urlHooks);
+  escape = urlHooks.escape.bind(urlHooks);
+  unescape = urlHooks.unescape.bind(urlHooks);
+
+  // 暴露控制接口
+  window.URLHooks = urlHooks;
+
+  console.log('%cURL 编码/解码方法 Hook 已安装', 'color: #4CAF50; font-weight: bold');
+  console.log('%c使用 URLHooks 对象控制 Hook 行为:', 'color: #2196F3; font-weight: bold');
+  console.log('%cURLHooks.enable()/disable() - 启用/禁用 Hook', 'color: #9C27B0;');
+  console.log('%cURLHooks.setLogLevel("verbose"|"minimal"|"none") - 设置日志级别', 'color: #9C27B0;');
+  console.log('%cURLHooks.toggleDeprecationWarnings(true|false) - 切换弃用警告', 'color: #9C27B0;');
+  console.log('%cURLHooks.restore() - 恢复原始方法', 'color: #9C27B0;');}
+  Hook('${e}');
+    `;
+    document.documentElement.appendChild(script);
+    script.remove();
+}
