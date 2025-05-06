@@ -40,13 +40,13 @@ function injectHookJson(e) {
             const isVerbose = this.logLevel === 'verbose';
             isVerbose && console.log('%c[JSON.parse]', 'color: #4CAF50; font-weight: bold');
             isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', text);
-            if (e){
-                if (text.includes(e)){
-                    debugger;
-                }
-            }
+            debugger;
             try {
                 const result = this.originalParse.call(this, text);
+                if (e) {
+                if (text.includes(e) || String(result).includes(e)){
+                    debugger;
+                }}
                 isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
