@@ -11,7 +11,8 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 
 1. [GitHub](https://github.com/peng0928/SpiderCrawlPlug)
 2. [下载链接](https://github.com/peng0928/SpiderCrawlPlug/archive/refs/heads/main.zip)
-`最新版请选择V2版本, chrome 64位的版本建议使用V2版本, chrome 32位的版本建议使用V1版本`
+   `最新版请选择V2版本, chrome 64位的版本建议使用V2版本, chrome 32位的版本建议使用V1版本`
+
 - 在chrome拓展页面加载已解压的拓展程序，如图
   ![img.png](img/img.png)
 
@@ -30,22 +31,33 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 ## 3.3 在抓包中心重新刷新页面即可看到抓包数据
 
 ![img.png](img/img5.png)
+
 # 4.功能介绍
+
 ## 4.1 查看数据
+
 ![img_1.png](img/img_1.png)
 ![img_2.png](img/img_2.png)
+
 ## 4.2 工具箱
+
 ![img_3.png](img/img_3.png)
 
 # 5.更新日志
+
 ## V1.0.0
+
 - 新增页面抓包开关控制
 - 新增报文、请求参数、响应内容复制功能
 
+## V2.0.0
+- 新增hook功能(2025.05.07  已发布)
+
 # 贡献
+
 - 感谢 Github 的 fuce1314 用户提出优化建议
 
-
 # 联系方式
+
 - 微信(麻烦备注一下: 抓包插件): penr1314
-[给作者提bug](https://github.com/peng0928/SpiderCrawlPlug/issues)
+  [给作者提bug](https://github.com/peng0928/SpiderCrawlPlug/issues)
