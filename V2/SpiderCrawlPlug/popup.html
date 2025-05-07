@@ -14,6 +14,11 @@
             padding: 0;
             overflow: hidden; /* 防止滚动条出现 */
         }
+
+        .no-events-cursor {
+            pointer-events: none;
+            cursor: no-drop;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-auto p-6">
@@ -52,7 +57,7 @@
                 id="cardContent"
                 class="transition-height max-h-[500px] opacity-100"
         >
-            <div class="p-4 pt-0 space-y-4">
+            <div class="p-1 space-y-6">
                 <!-- 搜索输入框 -->
                 <div class="flex justify-center">
                     <input
@@ -64,53 +69,72 @@
                 </div>
 
                 <!-- 选项列表 -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <!-- 选项1 -->
-                        <div class="flex">
-                            <input
-                                    type="checkbox"
-                                    id="hookJson"
-                            >
-                            <label for="hookJson" class="ml-3 block text-cyan-100" id="BhookJson">
-                                JSON函数
-                            </label>
+                <div class="p-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookJson"
+                                            style="pointer-events: none;"
+                                    >
+                                </div>
+                                <label for="hookJson" class="cursor-pointer ml-3 block text-cyan-100" id="BhookJson">
+                                    JSON函数
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="space-y-2">
-                        <!-- 选项1 -->
-                        <div class="flex">
-                            <input
-                                    type="checkbox"
-                                    id="hookUrl"
-                            >
-                            <label for="hookUrl" class="ml-3 block text-cyan-100" id="BhookUrl">
-                                url编码、解码
-                            </label>
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookUrl"
+                                            class="cursor-no-drop"
+                                            style="pointer-events: none;"
+                                    >
+                                </div>
+                                <label for="hookUrl" class="cursor-pointer ml-3 block text-cyan-100" id="BhookUrl">
+                                    url编码、解码
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="space-y-2">
-                        <!-- 选项1 -->
-                        <div class="flex">
-                            <input
-                                    type="checkbox"
-                                    id="hookXhr"
-                            >
-                            <label for="hookXhr" class="ml-3 block text-cyan-100" id="BhookXhr">
-                                Xhr拦截
-                            </label>
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookXhr"
+                                            class="cursor-no-drop"
+                                            style="pointer-events: none;"
+
+                                    >
+                                </div>
+                                <label for="hookXhr" class="cursor-pointer ml-3 block text-cyan-100" id="BhookXhr">
+                                    Xhr拦截
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="space-y-2">
-                        <!-- 选项1 -->
-                        <div class="flex">
-                            <input
-                                    type="checkbox"
-                                    id="hookCookie"
-                            >
-                            <label for="hookCookie" class="ml-3 block text-cyan-100" id="BhookCookie">
-                                Cookie拦截
-                            </label>
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookCookie"
+                                            class="cursor-no-drop"
+                                            style="pointer-events: none;"
+                                    >
+                                </div>
+                                <label for="hookCookie" class="cursor-pointer ml-3 block text-cyan-100"
+                                       id="BhookCookie">
+                                    Cookie拦截
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
