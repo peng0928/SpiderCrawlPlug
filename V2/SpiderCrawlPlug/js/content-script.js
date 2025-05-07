@@ -5,11 +5,12 @@
     }
 });
 
-chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr'], function (result) {
+chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCookie'], function (result) {
     hookJson = result.hookJson;
     HookInput = String(result.HookInput);
     hookUrl = result.hookUrl;
     hookXhr = result.hookXhr;
+    hookCookie = result.hookCookie;
     if (hookJson) {
         // 确保DOM加载后注入
         if (document.readyState === 'loading') {
@@ -29,6 +30,15 @@ chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr'], functi
             document.addEventListener('DOMContentLoaded', injectHookXhr(HookInput));
         } else {
             injectHookXhr(HookInput);
+        }
+    }
+    if (hookCookie) {
+        // 确保DOM加载后注入
+        console.log("------------------正在监听XHR请求------------------")
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', injectHookCookie(HookInput));
+        } else {
+            injectHookCookie(HookInput);
         }
     }
 });
@@ -498,6 +508,41 @@ function Hook(e) {
 }
 
   console.log('%cXHR Hook 已安装', 'color: #4CAF50; font-weight: bold');
+  Hook('${e}');
+`;
+    document.documentElement.appendChild(script);
+    script.remove();
+}
+
+function injectHookCookie(e) {
+    const script = document.createElement('script');
+    script.textContent = `
+function Hook(e) {
+var cookie_cache = document.cookie;
+
+Object.defineProperty(document, 'cookie', {
+    get: function() {
+        console.log('%c[Cookie Get]: ', 'color: #4CAF50; font-weight: bold', cookie_cache);
+        if (e){
+                if (cookie_cache.includes(e)){
+                    debugger;
+                }
+            }
+        return cookie_cache;
+    },
+    set: function(val) {
+        console.log('%c[Cookie Set]: ', 'color: red; font-weight: bold', val);
+        if (e){
+                if (val.includes(e)){
+                    debugger;
+                }
+            }
+    }
+})
+
+}
+
+  console.log('%cCookie Hook 已安装', 'color: #4CAF50; font-weight: bold');
   Hook('${e}');
 `;
     document.documentElement.appendChild(script);
