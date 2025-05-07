@@ -9,15 +9,14 @@
     <style>
         body {
             font-family: "Microsoft Yahei";
-              width: 400px;
-              height: 600px;
-              margin: 0;
-              padding: 0;
-              overflow: hidden; /* 防止滚动条出现 */
+            width: 400px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 防止滚动条出现 */
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-6">
+<body class="bg-gray-50 h-auto p-6">
 <div class="p-3 flex justify-between">
     <div class="form-group form-check">
         <input type="checkbox" class="form-check-input" id="exampleCheck1">
@@ -65,35 +64,44 @@
                 </div>
 
                 <!-- 选项列表 -->
-                <div class="space-y-2">
-                    <!-- 选项1 -->
-                    <div class="flex">
-                        <input
-                                type="checkbox"
-                                id="hookJson"
-                        >
-                        <label for="hookJson" class="ml-3 block text-cyan-100" id="BhookJson">
-                            JSON函数
-                        </label>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <!-- 选项1 -->
+                        <div class="flex">
+                            <input
+                                    type="checkbox"
+                                    id="hookJson"
+                            >
+                            <label for="hookJson" class="ml-3 block text-cyan-100" id="BhookJson">
+                                JSON函数
+                            </label>
+                        </div>
                     </div>
-
-
-                </div>
-                <div class="space-y-2">
-                    <!-- 选项1 -->
-                    <div class="flex">
-                        <input
-                                type="checkbox"
-                                id="hookUrl"
-                        >
-                        <label for="hookUrl" class="ml-3 block text-cyan-100" id="BhookUrl">
-                            url编码、解码
-                        </label>
+                    <div class="space-y-2">
+                        <!-- 选项1 -->
+                        <div class="flex">
+                            <input
+                                    type="checkbox"
+                                    id="hookUrl"
+                            >
+                            <label for="hookUrl" class="ml-3 block text-cyan-100" id="BhookUrl">
+                                url编码、解码
+                            </label>
+                        </div>
                     </div>
-
-
+                    <div class="space-y-2">
+                        <!-- 选项1 -->
+                        <div class="flex">
+                            <input
+                                    type="checkbox"
+                                    id="hookXhr"
+                            >
+                            <label for="hookXhr" class="ml-3 block text-cyan-100" id="BhookXhr">
+                                Xhr拦截
+                            </label>
+                        </div>
+                    </div>
                 </div>
-
             </div>
         </div>
     </div>

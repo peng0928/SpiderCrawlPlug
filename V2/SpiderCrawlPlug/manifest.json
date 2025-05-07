@@ -23,13 +23,13 @@
         "<all_urls>"
       ],
       "js": [
-        "js/jquery-1.8.3.js",
-        "js/content-script.js"
+        "js/content-script.js",
+        "js/jquery-1.8.3.js"
       ],
       "css": [
         "css/custom.css"
       ],
-      "run_at": "document_start"
+      "run_at": "document_end"
     },
     {
       "matches": [

@@ -37,6 +37,20 @@ chrome.storage.local.get('hookJson', function (result) {
     }
 
 });
+chrome.storage.local.get('hookXhr', function (result) {
+    result = result.hookXhr;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookXhr').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookXhr').checked = false;
+        }
+    } catch {
+    }
+
+});
 chrome.storage.local.get('hookUrl', function (result) {
     result = result.hookUrl;
     try {
@@ -72,6 +86,18 @@ $("#BhookJson").click((e) => {
         });
     } else {
         chrome.storage.local.set({hookJson: true}, function () {
+        });
+    }
+
+});
+$("#BhookXhr").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookXhr").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookXhr: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookXhr: true}, function () {
         });
     }
 
@@ -118,10 +144,7 @@ $("#custom_window_size").click(() => {
     chrome.windows.getCurrent({}, (currentWindow) => {
         var startLeft = 10;
         chrome.windows.update(currentWindow.id, {
-            left: startLeft * 10,
-            top: 100,
-            width: 800,
-            height: 600,
+            left: startLeft * 10, top: 100, width: 800, height: 600,
         });
         var inteval = setInterval(() => {
             if (startLeft >= 40) clearInterval(inteval);
@@ -220,12 +243,9 @@ function getCurrentTabId(callback) {
 // 这2个获取当前选项卡id的方法大部分时候效果都一致，只有少部分时候会不一样
 function getCurrentTabId2() {
     chrome.windows.getCurrent(function (currentWindow) {
-        chrome.tabs.query(
-            {active: true, windowId: currentWindow.id},
-            function (tabs) {
-                if (callback) callback(tabs.length ? tabs[0].id : null);
-            }
-        );
+        chrome.tabs.query({active: true, windowId: currentWindow.id}, function (tabs) {
+            if (callback) callback(tabs.length ? tabs[0].id : null);
+        });
     });
 }
 
@@ -254,11 +274,8 @@ $("#update_bg_color").click(() => {
 
 // 修改字体大小
 $("#update_font_size").click(() => {
-    sendMessageToContentScript(
-        {cmd: "update_font_size", size: 42},
-        function (response) {
-        }
-    );
+    sendMessageToContentScript({cmd: "update_font_size", size: 42}, function (response) {
+    });
 });
 
 // 显示badge

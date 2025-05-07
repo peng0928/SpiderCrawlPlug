@@ -5,10 +5,11 @@
     }
 });
 
-chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl'], function (result) {
+chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr'], function (result) {
     hookJson = result.hookJson;
     HookInput = String(result.HookInput);
     hookUrl = result.hookUrl;
+    hookXhr = result.hookXhr;
     if (hookJson) {
         // 确保DOM加载后注入
         if (document.readyState === 'loading') {
@@ -20,6 +21,15 @@ chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl'], function (result)
     if (hookUrl) {
         // 确保DOM加载后注入
         document.addEventListener('DOMContentLoaded', injectHookUrl(HookInput));
+    }
+    if (hookXhr) {
+        // 确保DOM加载后注入
+        console.log("------------------正在监听XHR请求------------------")
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', injectHookXhr(HookInput));
+        } else {
+            injectHookXhr(HookInput);
+        }
     }
 });
 
@@ -40,7 +50,6 @@ function injectHookJson(e) {
             const isVerbose = this.logLevel === 'verbose';
             isVerbose && console.log('%c[JSON.parse]', 'color: #4CAF50; font-weight: bold');
             isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', text);
-            debugger;
             try {
                 const result = this.originalParse.call(this, text);
                 if (e) {
@@ -122,8 +131,8 @@ function injectHookJson(e) {
 }
 
 function injectHookUrl(e) {
-  const script = document.createElement('script');
-  script.textContent = `
+    const script = document.createElement('script');
+    script.textContent = `
   function Hook(e) {
   const urlHooks = {
     original: {
@@ -154,7 +163,7 @@ function injectHookUrl(e) {
         const endTime = performance.now();
         isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
          if (e){
-                if (uri.includes(e) && result.includes(e)){
+                if (uri.includes(e) || result.includes(e)){
                     debugger;
                 }
             }
@@ -181,7 +190,7 @@ function injectHookUrl(e) {
         const endTime = performance.now();
         isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
-                if (String(component).includes(e) && result.includes(e)){
+                if (String(component).includes(e) || result.includes(e)){
                     debugger;
                 }
             }
@@ -208,7 +217,7 @@ function injectHookUrl(e) {
         const endTime = performance.now();
         isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
-                if (encodedURI.includes(e) && result.includes(e)){
+                if (encodedURI.includes(e) || result.includes(e)){
                     debugger;
                 }
             }
@@ -235,7 +244,7 @@ function injectHookUrl(e) {
         const endTime = performance.now();
         isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
-                if (encodedComponent.includes(e) && result.includes(e)){
+                if (encodedComponent.includes(e) || result.includes(e)){
                     debugger;
                 }
             }
@@ -267,7 +276,7 @@ function injectHookUrl(e) {
         const endTime = performance.now();
         isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
            if (e){
-                if (str.includes(e) && result.includes(e)){
+                if (str.includes(e) || result.includes(e)){
                     debugger;
                 }
             }
@@ -299,7 +308,7 @@ function injectHookUrl(e) {
         const endTime = performance.now();
         isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
-                if (str.includes(e) && result.includes(e)){
+                if (str.includes(e) || result.includes(e)){
                     debugger;
                 }
             }
@@ -357,6 +366,140 @@ function injectHookUrl(e) {
   console.log('%cURLHooks.restore() - 恢复原始方法', 'color: #9C27B0;');}
   Hook('${e}');
     `;
+    document.documentElement.appendChild(script);
+    script.remove();
+}
+
+function injectHookXhr(e) {
+    const script = document.createElement('script');
+    script.textContent = `
+function Hook(e) {
+    // 保存原始的XMLHttpRequest对象
+    const originalXHR = window.XMLHttpRequest;
+
+    // 重写XMLHttpRequest构造函数
+    window.XMLHttpRequest = function() {
+        const xhr = new originalXHR();
+        
+        // 保存原始的open方法
+        const originalOpen = xhr.open;
+        
+        // 保存原始的send方法
+        const originalSend = xhr.send;
+        
+        // 保存原始的setRequestHeader方法
+        const originalSetRequestHeader = xhr.setRequestHeader;
+        
+        // 用于存储请求头
+        const requestHeaders = {};
+        
+        // 重写open方法
+        xhr.open = function(method, url) {
+            this._method = method;
+            this._url = url;
+            
+            // 可以在这里修改请求方法或URL
+            // method = 'GET'; // 示例：强制改为GET请求
+            // url = url.replace('example.com', 'proxy.example.com'); // 示例：修改URL
+           if (e){
+                if (url.includes(e)){
+                    debugger;
+                }
+            }
+            return originalOpen.apply(this, arguments);
+        };
+        
+        // 重写setRequestHeader方法
+        xhr.setRequestHeader = function(header, value) {
+            requestHeaders[header] = value;
+            console.log(header, value)
+             if (e){
+                if (header.includes(e) || String(value).includes(e)){
+                    debugger;
+                }
+            }
+            return originalSetRequestHeader.apply(this, arguments);
+        };
+        
+        // 重写send方法
+        xhr.send = function(data) {
+            // 请求发送前的处理
+            const requestData = data;
+            
+            // 可以在这里修改请求数据
+            // if (data) {
+            //     try {
+            //         const jsonData = JSON.parse(data);
+            //         jsonData.modified = true; // 示例：修改请求数据
+            //         data = JSON.stringify(jsonData);
+            //         console.log('%c[Request Data]', 'color: blue; font-weight: bold');
+            //     } catch (e) {
+            //     }
+            // }
+           if (e){
+                if (String(data).includes(e)){
+                    debugger;
+                }
+            }
+            // 打印请求信息
+            console.log('%c[XHR Request]: %s %s', 'color: blue; font-weight: bold',this._method, this._url);
+            console.log('%c[data]:', 'color: green; font-weight: bold', data)
+            console.log('%c[headers]:', 'color: green; font-weight: bold', requestHeaders)
+            
+            // 监听readyState变化
+            this.addEventListener('readystatechange', function() {
+                if (this.readyState === 4) {
+                    // 请求完成
+                    let response = this.response;
+                    
+                    try {
+                        // 尝试解析JSON响应
+                        response = JSON.parse(this.responseText);
+                    } catch (e) {
+                        // 不是JSON格式，保持原样
+                    }
+                    
+                    // 可以在这里修改响应数据
+                    // if (typeof response === 'object') {
+                    //     response.modified = true; // 示例：修改响应数据
+                    // }
+                    
+                    // 打印响应信息
+                    if (e){
+                    if (this._url.includes(e) ||String(this.status).includes(e) || String(this.statusText).includes(e) || String(response).includes(e)){
+                        debugger;
+                    }}
+                    console.log('%c[XHR Response]: %s', 'color: red; font-weight: bold', this._url);
+                    console.log('%c[响应]:', 'color: green; font-weight: bold', {
+                        url: this._url,
+                        status: this.status,
+                        statusText: this.statusText,
+                        headers: this.getAllResponseHeaders(),
+                        response: response
+                    });
+                    console.log('-'.repeat(180));
+                    console.log(\n\n);
+                    // 如果需要，可以在这里触发自定义事件
+                    const event = new CustomEvent('xhrHookResponse', {
+                        detail: {
+                            url: this._url,
+                            status: this.status,
+                            response: response
+                        }
+                    });
+                    window.dispatchEvent(event);
+                }
+            });
+            
+            return originalSend.apply(this, arguments);
+        };
+        return xhr;
+    };
+}
+
+  console.log('%cXHR Hook 已安装', 'color: #4CAF50; font-weight: bold');
+  Hook('${e}');
+`;
     document.documentElement.appendChild(script);
     script.remove();
 }
