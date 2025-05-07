@@ -23,9 +23,13 @@
 </head>
 <body class="bg-gray-50 h-auto p-6">
 <div class="p-3 flex justify-between">
-    <div class="form-group form-check">
-        <input type="checkbox" class="form-check-input" id="exampleCheck1">
-        <label class="form-check-label" for="exampleCheck1" id="openCheck">开启监听</label>
+    <div class="flex">
+        <div class="cursor-no-drop">
+            <input type="checkbox"
+                   style="pointer-events: none;"
+                   id="exampleCheck1">
+        </div>
+        <label for="exampleCheck1" class="cursor-pointer ml-1 block " id="openCheck">开启监听</label>
     </div>
     <div>
         <button type="button" class="btn btn-primary" id="open_background">抓包中心</button>
