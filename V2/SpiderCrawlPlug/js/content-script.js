@@ -492,7 +492,7 @@ function Hook(e) {
                     if (this._url.includes(e) ||String(this.status).includes(e) || String(this.statusText).includes(e) || String(response).includes(e)){
                         debugger;
                     }}
-                    log('%c[XHR Response]: %s', 'color: red; font-weight: bold', this._url);
+                    log('%c[XHR Response]: %s', 'color: red; font-weight: bold', this._method, this._url);
                     log('%c[响应]:', 'color: green; font-weight: bold', {
                         url: this._url,
                         status: this.status,
