@@ -46,7 +46,12 @@ chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCo
 function injectHookJson(e) {
     const script = document.createElement('script');
     script.textContent = `
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    let log = iframe.contentWindow.console.log;
     function HJSOn(e) {
+
     const jsonHooks = {
         originalParse: JSON.parse,
         originalStringify: JSON.stringify,
@@ -58,19 +63,19 @@ function injectHookJson(e) {
                 return this.originalParse.call(this, text);
             }
             const isVerbose = this.logLevel === 'verbose';
-            isVerbose && console.log('%c[JSON.parse]', 'color: #4CAF50; font-weight: bold');
-            isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', text);
+            isVerbose && log('%c[JSON.parse]', 'color: #4CAF50; font-weight: bold');
+            isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', text);
             try {
                 const result = this.originalParse.call(this, text);
                 if (e) {
                 if (text.includes(e) || String(result).includes(e)){
                     debugger;
                 }}
-                isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+                isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
-                console.log('%c错误:', 'color: #F44336; font-weight: bold');
-                console.log(error);
+                log('%c错误:', 'color: #F44336; font-weight: bold');
+                log(error);
                 throw error;
             }
         },
@@ -81,8 +86,8 @@ function injectHookJson(e) {
             }
 
             const isVerbose = this.logLevel === 'verbose';
-            isVerbose && console.log('%c[JSON.stringify]', 'color: #4CAF50; font-weight: bold');
-            isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', value);
+            isVerbose && log('%c[JSON.stringify]', 'color: #4CAF50; font-weight: bold');
+            isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', value);
             try {
 
                 const result = this.originalStringify.call(this, value, replacer, space);
@@ -91,33 +96,33 @@ function injectHookJson(e) {
                     debugger;
                     }
                 }
-                console.log('%c结果: ', 'color: #2196F3; font-weight: bold', result);
+                log('%c结果: ', 'color: #2196F3; font-weight: bold', result);
                 return result;
             } catch (error) {
-                console.log('%c错误:', 'color: #F44336; font-weight: bold', error);
+                log('%c错误:', 'color: #F44336; font-weight: bold', error);
                 throw error;
             }
         },
 
         enable: function () {
             this.enabled = true;
-            console.log('%cJSON Hooks 已启用', 'color: #4CAF50; font-weight: bold');
+            log('%cJSON Hooks 已启用', 'color: #4CAF50; font-weight: bold');
         },
 
         disable: function () {
             this.enabled = false;
-            console.log('%cJSON Hooks 已禁用', 'color: #F44336; font-weight: bold');
+            log('%cJSON Hooks 已禁用', 'color: #F44336; font-weight: bold');
         },
 
         setLogLevel: function (level) {
             this.logLevel = level;
-            console.log('%c日志级别设置为: %c', 'color: #2196F3; font-weight: bold', level);
+            log('%c日志级别设置为: %c', 'color: #2196F3; font-weight: bold', level);
         },
 
         restore: function () {
             JSON.parse = this.originalParse;
             JSON.stringify = this.originalStringify;
-            console.log('%c已恢复原始 JSON 方法', 'color: #4CAF50; font-weight: bold');
+            log('%c已恢复原始 JSON 方法', 'color: #4CAF50; font-weight: bold');
         }
     };
 
@@ -128,11 +133,11 @@ function injectHookJson(e) {
     // 暴露控制接口
     window.JSONHooks = jsonHooks;
 
-    console.log('%cJSON 方法 Hook 已安装', 'color: #4CAF50; font-weight: bold');
-    console.log('%c使用 JSONHooks 对象控制 Hook 行为:', 'color: #2196F3; font-weight: bold');
-    console.log('%cJSONHooks.enable()/disable() - 启用/禁用 Hook', 'color: #9C27B0;');
-    console.log('%cJSONHooks.setLogLevel("verbose"|"minimal"|"none") - 设置日志级别', 'color: #9C27B0;');
-    console.log('%cJSONHooks.restore() - 恢复原始方法', 'color: #9C27B0;');
+    log('%cJSON 方法 Hook 已安装', 'color: #4CAF50; font-weight: bold');
+    log('%c使用 JSONHooks 对象控制 Hook 行为:', 'color: #2196F3; font-weight: bold');
+    log('%cJSONHooks.enable()/disable() - 启用/禁用 Hook', 'color: #9C27B0;');
+    log('%cJSONHooks.setLogLevel("verbose"|"minimal"|"none") - 设置日志级别', 'color: #9C27B0;');
+    log('%cJSONHooks.restore() - 恢复原始方法', 'color: #9C27B0;');
     };
     HJSOn('${e}');
     `;
@@ -144,6 +149,10 @@ function injectHookUrl(e) {
     const script = document.createElement('script');
     script.textContent = `
   function Hook(e) {
+      const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const log = iframe.contentWindow.console.log;
   const urlHooks = {
     original: {
       encodeURI: encodeURI,
@@ -164,14 +173,14 @@ function injectHookUrl(e) {
       }
 
       const isVerbose = this.logLevel === 'verbose';
-      isVerbose && console.log('%c[encodeURI] ', 'color: #4CAF50; font-weight: bold');
-      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', uri);
+      isVerbose && log('%c[encodeURI] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', uri);
 
       try {
         const startTime = performance.now();
         const result = this.original.encodeURI.call(this, uri);
         const endTime = performance.now();
-        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
          if (e){
                 if (uri.includes(e) || result.includes(e)){
                     debugger;
@@ -191,14 +200,14 @@ function injectHookUrl(e) {
       }
 
       const isVerbose = this.logLevel === 'verbose';
-      isVerbose && console.log('%c[encodeURIComponent] ', 'color: #4CAF50; font-weight: bold');
-      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', component);
+      isVerbose && log('%c[encodeURIComponent] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', component);
 
       try {
         const startTime = performance.now();
         const result = this.original.encodeURIComponent.call(this, component);
         const endTime = performance.now();
-        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
                 if (String(component).includes(e) || result.includes(e)){
                     debugger;
@@ -218,14 +227,14 @@ function injectHookUrl(e) {
       }
 
       const isVerbose = this.logLevel === 'verbose';
-      isVerbose && console.log('%c[decodeURI] ', 'color: #4CAF50; font-weight: bold');
-      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', encodedURI);
+      isVerbose && log('%c[decodeURI] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', encodedURI);
 
       try {
         const startTime = performance.now();
         const result = this.original.decodeURI.call(this, encodedURI);
         const endTime = performance.now();
-        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
                 if (encodedURI.includes(e) || result.includes(e)){
                     debugger;
@@ -245,14 +254,14 @@ function injectHookUrl(e) {
       }
 
       const isVerbose = this.logLevel === 'verbose';
-      isVerbose && console.log('%c[decodeURIComponent] ', 'color: #4CAF50; font-weight: bold');
-      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', encodedComponent);
+      isVerbose && log('%c[decodeURIComponent] ', 'color: #4CAF50; font-weight: bold');
+      isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', encodedComponent);
 
       try {
         const startTime = performance.now();
         const result = this.original.decodeURIComponent.call(this, encodedComponent);
         const endTime = performance.now();
-        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
                 if (encodedComponent.includes(e) || result.includes(e)){
                     debugger;
@@ -277,14 +286,14 @@ function injectHookUrl(e) {
       }
 
       const isVerbose = this.logLevel === 'verbose';
-      isVerbose && console.log('%c[escape] 开始转义', 'color: #4CAF50; font-weight: bold');
-      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', str);
+      isVerbose && log('%c[escape] 开始转义', 'color: #4CAF50; font-weight: bold');
+      isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', str);
 
       try {
         const startTime = performance.now();
         const result = this.original.escape.call(this, str);
         const endTime = performance.now();
-        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
            if (e){
                 if (str.includes(e) || result.includes(e)){
                     debugger;
@@ -309,14 +318,14 @@ function injectHookUrl(e) {
       }
 
       const isVerbose = this.logLevel === 'verbose';
-      isVerbose && console.log('%c[unescape] 开始反转义', 'color: #4CAF50; font-weight: bold');
-      isVerbose && console.log('%c输入:', 'color: #2196F3; font-weight: bold', str);
+      isVerbose && log('%c[unescape] 开始反转义', 'color: #4CAF50; font-weight: bold');
+      isVerbose && log('%c输入:', 'color: #2196F3; font-weight: bold', str);
 
       try {
         const startTime = performance.now();
         const result = this.original.unescape.call(this, str);
         const endTime = performance.now();
-        isVerbose && console.log('%c结果:', 'color: #2196F3; font-weight: bold', result);
+        isVerbose && log('%c结果:', 'color: #2196F3; font-weight: bold', result);
         if (e){
                 if (str.includes(e) || result.includes(e)){
                     debugger;
@@ -332,12 +341,12 @@ function injectHookUrl(e) {
 
     enable: function() {
       this.enabled = true;
-      console.log('%cURL Hooks 已启用', 'color: #4CAF50; font-weight: bold');
+      log('%cURL Hooks 已启用', 'color: #4CAF50; font-weight: bold');
     },
 
     disable: function() {
       this.enabled = false;
-      console.log('%cURL Hooks 已禁用', 'color: #F44336; font-weight: bold');
+      log('%cURL Hooks 已禁用', 'color: #F44336; font-weight: bold');
     },
 
     setLogLevel: function(level) {
@@ -355,7 +364,7 @@ function injectHookUrl(e) {
       decodeURIComponent = this.original.decodeURIComponent;
       escape = this.original.escape;
       unescape = this.original.unescape;
-      console.log('%c已恢复原始 URL 方法', 'color: #4CAF50; font-weight: bold');
+      log('%c已恢复原始 URL 方法', 'color: #4CAF50; font-weight: bold');
     }
   };
   encodeURI = urlHooks.encodeURI.bind(urlHooks);
@@ -368,12 +377,12 @@ function injectHookUrl(e) {
   // 暴露控制接口
   window.URLHooks = urlHooks;
 
-  console.log('%cURL 编码/解码方法 Hook 已安装', 'color: #4CAF50; font-weight: bold');
-  console.log('%c使用 URLHooks 对象控制 Hook 行为:', 'color: #2196F3; font-weight: bold');
-  console.log('%cURLHooks.enable()/disable() - 启用/禁用 Hook', 'color: #9C27B0;');
-  console.log('%cURLHooks.setLogLevel("verbose"|"minimal"|"none") - 设置日志级别', 'color: #9C27B0;');
-  console.log('%cURLHooks.toggleDeprecationWarnings(true|false) - 切换弃用警告', 'color: #9C27B0;');
-  console.log('%cURLHooks.restore() - 恢复原始方法', 'color: #9C27B0;');}
+  log('%cURL 编码/解码方法 Hook 已安装', 'color: #4CAF50; font-weight: bold');
+  log('%c使用 URLHooks 对象控制 Hook 行为:', 'color: #2196F3; font-weight: bold');
+  log('%cURLHooks.enable()/disable() - 启用/禁用 Hook', 'color: #9C27B0;');
+  log('%cURLHooks.setLogLevel("verbose"|"minimal"|"none") - 设置日志级别', 'color: #9C27B0;');
+  log('%cURLHooks.toggleDeprecationWarnings(true|false) - 切换弃用警告', 'color: #9C27B0;');
+  log('%cURLHooks.restore() - 恢复原始方法', 'color: #9C27B0;');}
   Hook('${e}');
     `;
     document.documentElement.appendChild(script);
@@ -381,9 +390,14 @@ function injectHookUrl(e) {
 }
 
 function injectHookXhr(e) {
+
     const script = document.createElement('script');
     script.textContent = `
 function Hook(e) {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const log = iframe.contentWindow.console.log;
     // 保存原始的XMLHttpRequest对象
     const originalXHR = window.XMLHttpRequest;
 
@@ -422,7 +436,7 @@ function Hook(e) {
         // 重写setRequestHeader方法
         xhr.setRequestHeader = function(header, value) {
             requestHeaders[header] = value;
-            console.log(header, value)
+            log(header, value)
              if (e){
                 if (header.includes(e) || String(value).includes(e)){
                     debugger;
@@ -442,7 +456,7 @@ function Hook(e) {
             //         const jsonData = JSON.parse(data);
             //         jsonData.modified = true; // 示例：修改请求数据
             //         data = JSON.stringify(jsonData);
-            //         console.log('%c[Request Data]', 'color: blue; font-weight: bold');
+            //         log('%c[Request Data]', 'color: blue; font-weight: bold');
             //     } catch (e) {
             //     }
             // }
@@ -452,9 +466,9 @@ function Hook(e) {
                 }
             }
             // 打印请求信息
-            console.log('%c[XHR Request]: %s %s', 'color: blue; font-weight: bold',this._method, this._url);
-            console.log('%c[data]:', 'color: green; font-weight: bold', data)
-            console.log('%c[headers]:', 'color: green; font-weight: bold', requestHeaders)
+            log('%c[XHR Request]: %s %s', 'color: blue; font-weight: bold',this._method, this._url);
+            log('%c[data]:', 'color: green; font-weight: bold', data)
+            log('%c[headers]:', 'color: green; font-weight: bold', requestHeaders)
             
             // 监听readyState变化
             this.addEventListener('readystatechange', function() {
@@ -479,15 +493,15 @@ function Hook(e) {
                     if (this._url.includes(e) ||String(this.status).includes(e) || String(this.statusText).includes(e) || String(response).includes(e)){
                         debugger;
                     }}
-                    console.log('%c[XHR Response]: %s', 'color: red; font-weight: bold', this._url);
-                    console.log('%c[响应]:', 'color: green; font-weight: bold', {
+                    log('%c[XHR Response]: %s', 'color: red; font-weight: bold', this._url);
+                    log('%c[响应]:', 'color: green; font-weight: bold', {
                         url: this._url,
                         status: this.status,
                         statusText: this.statusText,
                         headers: this.getAllResponseHeaders(),
                         response: response
                     });
-                    console.log('-'.repeat(180));
+                    log('-'.repeat(180));
                     // 如果需要，可以在这里触发自定义事件
                     const event = new CustomEvent('xhrHookResponse', {
                         detail: {
@@ -505,9 +519,8 @@ function Hook(e) {
         return xhr;
     };
 }
-
-  console.log('%cXHR Hook 已安装', 'color: #4CAF50; font-weight: bold');
-  Hook('${e}');
+log('%cXHR Hook 已安装', 'color: #4CAF50; font-weight: bold');
+Hook('${e}',);
 `;
     document.documentElement.appendChild(script);
     script.remove();
@@ -517,11 +530,15 @@ function injectHookCookie(e) {
     const script = document.createElement('script');
     script.textContent = `
 function Hook(e) {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const log = iframe.contentWindow.console.log;
 var cookie_cache = document.cookie;
 
 Object.defineProperty(document, 'cookie', {
     get: function() {
-        console.log('%c[Cookie Get]: ', 'color: #4CAF50; font-weight: bold', cookie_cache);
+        log('%c[Cookie Get]: ', 'color: #4CAF50; font-weight: bold', cookie_cache);
         if (e){
                 if (cookie_cache.includes(e)){
                     debugger;
@@ -530,7 +547,7 @@ Object.defineProperty(document, 'cookie', {
         return cookie_cache;
     },
     set: function(val) {
-        console.log('%c[Cookie Set]: ', 'color: red; font-weight: bold', val);
+        log('%c[Cookie Set]: ', 'color: red; font-weight: bold', val);
         if (e){
                 if (val.includes(e)){
                     debugger;
@@ -541,7 +558,7 @@ Object.defineProperty(document, 'cookie', {
 
 }
 
-  console.log('%cCookie Hook 已安装', 'color: #4CAF50; font-weight: bold');
+  log('%cCookie Hook 已安装', 'color: #4CAF50; font-weight: bold');
   Hook('${e}');
 `;
     document.documentElement.appendChild(script);
