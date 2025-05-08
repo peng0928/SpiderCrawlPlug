@@ -393,11 +393,11 @@ function injectHookXhr(e) {
 
     const script = document.createElement('script');
     script.textContent = `
+const iframe = document.createElement('iframe');
+iframe.style.display = 'none';
+document.body.appendChild(iframe);
+const log = iframe.contentWindow.console.log;
 function Hook(e) {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    const log = iframe.contentWindow.console.log;
     // 保存原始的XMLHttpRequest对象
     const originalXHR = window.XMLHttpRequest;
 
