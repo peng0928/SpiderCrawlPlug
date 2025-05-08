@@ -436,7 +436,6 @@ function Hook(e) {
         // 重写setRequestHeader方法
         xhr.setRequestHeader = function(header, value) {
             requestHeaders[header] = value;
-            log(header, value)
              if (e){
                 if (header.includes(e) || String(value).includes(e)){
                     debugger;
