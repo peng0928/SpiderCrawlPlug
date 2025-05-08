@@ -23,8 +23,6 @@ $("#openCheck").click((e) => {
         chrome.storage.local.set({spiderSwitch: true}, function () {
         });
     }
-    window.location.reload();
-
 });
 
 
@@ -459,7 +457,7 @@ function ParamsModalBody(Data) {
 
         } catch {
             DataBody.textContent = htmlString;
-                 document.getElementById("DataModalBody").insertAdjacentHTML('beforebegin', `
+            document.getElementById("DataModalBody").insertAdjacentHTML('beforebegin', `
                 <div style="padding-right: 10px;" name="DataModalBody"><button type="button" class="btn btn-outline-primary btn-sm" style="float: right;" id="DataDictBody${Data.id}">复制</button></div>
             `);
             document.getElementById(`DataDictBody${Data.id}`).addEventListener('click', function () {

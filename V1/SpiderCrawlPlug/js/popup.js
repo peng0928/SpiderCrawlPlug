@@ -22,6 +22,64 @@ chrome.storage.local.get('spiderSwitch', function (result) {
     }
 
 });
+
+chrome.storage.local.get('hookJson', function (result) {
+    result = result.hookJson;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookJson').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookJson').checked = false;
+        }
+    } catch {
+    }
+
+});
+chrome.storage.local.get('hookXhr', function (result) {
+    result = result.hookXhr;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookXhr').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookXhr').checked = false;
+        }
+    } catch {
+    }
+
+});
+chrome.storage.local.get('hookUrl', function (result) {
+    result = result.hookUrl;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookUrl').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookUrl').checked = false;
+        }
+    } catch {
+    }
+
+});
+chrome.storage.local.get('hookCookie', function (result) {
+    result = result.hookCookie;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookCookie').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookCookie').checked = false;
+        }
+    } catch {
+    }
+
+});
+
 $("#openCheck").click((e) => {
     // 获取复选框的选中状态
     var isChecked = $("#exampleCheck1").prop('checked');
@@ -34,6 +92,55 @@ $("#openCheck").click((e) => {
     }
 
 });
+$("#BhookJson").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookJson").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookJson: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookJson: true}, function () {
+        });
+    }
+
+});
+$("#BhookXhr").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookXhr").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookXhr: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookXhr: true}, function () {
+        });
+    }
+
+});
+$("#BhookUrl").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookUrl").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookUrl: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookUrl: true}, function () {
+        });
+    }
+
+});
+$("#BhookCookie").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookCookie").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookCookie: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookCookie: true}, function () {
+        });
+    }
+
+});
+
 // 打开后台页
 $("#open_background").click((e) => {
     window.open(chrome.extension.getURL("background.html"));

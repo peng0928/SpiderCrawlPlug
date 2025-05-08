@@ -9,21 +9,148 @@
     <style>
         body {
             font-family: "Microsoft Yahei";
+            width: 400px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 防止滚动条出现 */
+        }
+
+        .no-events-cursor {
+            pointer-events: none;
+            cursor: no-drop;
         }
     </style>
 </head>
-<body>
-<div class="container" style="display: inline-block;white-space: nowrap; padding-top: 10%; padding-bottom: 10%">
-    <div class="form-group form-check" >
-        <input type="checkbox" class="form-check-input" id="exampleCheck1">
-        <label class="form-check-label" for="exampleCheck1" id="openCheck">开启监听</label>
+<body class="bg-gray-50 h-auto p-6">
+<div class="p-3 flex justify-between">
+    <div class="flex">
+        <div class="cursor-no-drop">
+            <input type="checkbox"
+                   style="pointer-events: none;"
+                   id="exampleCheck1">
+        </div>
+        <label for="exampleCheck1" class="cursor-pointer ml-1 block " id="openCheck">开启监听</label>
     </div>
-    <button type="button" class="btn btn-primary" id="open_background">抓包中心</button>
+    <div>
+        <button type="button" class="btn btn-primary" id="open_background">抓包中心</button>
+    </div>
+</div>
+
+<div class="w-full max-w-md">
+    <div class="neon-border bg-gray-800 rounded-xl overflow-hidden shadow-xl">
+        <!-- 卡片头部 - 点击可展开/折叠 -->
+        <div
+                id="cardHeader"
+                class="p-4 flex justify-between items-center cursor-pointer group"
+        >
+            <h3 class="text-xl font-bold text-white neon-text">HOOK 配置面板</h3>
+            <svg
+                    id="toggleIcon"
+                    class="w-6 h-6 text-cyan-400 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+            >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </div>
+
+        <!-- 卡片内容 - 可展开部分 -->
+        <div
+                id="cardContent"
+                class="transition-height max-h-[500px] opacity-100"
+        >
+            <div class="p-1 space-y-6">
+                <!-- 搜索输入框 -->
+                <div class="flex justify-center">
+                    <input
+                            id="HookInput"
+                            type="text"
+                            placeholder="输入 Hook 关键字..."
+                            class="tech-input px-4 py-2 w-full max-w-xs rounded-lg focus:outline-none placeholder-black transition"
+                    >
+                </div>
+
+                <!-- 选项列表 -->
+                <div class="p-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookJson"
+                                            style="pointer-events: none;"
+                                    >
+                                </div>
+                                <label for="hookJson" class="cursor-pointer ml-3 block text-cyan-100" id="BhookJson">
+                                    JSON函数
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookUrl"
+                                            class="cursor-no-drop"
+                                            style="pointer-events: none;"
+                                    >
+                                </div>
+                                <label for="hookUrl" class="cursor-pointer ml-3 block text-cyan-100" id="BhookUrl">
+                                    url编码、解码
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookXhr"
+                                            class="cursor-no-drop"
+                                            style="pointer-events: none;"
+
+                                    >
+                                </div>
+                                <label for="hookXhr" class="cursor-pointer ml-3 block text-cyan-100" id="BhookXhr">
+                                    Xhr拦截
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <!-- 选项1 -->
+                            <div class="flex">
+                                <div class="cursor-no-drop">
+                                    <input
+                                            type="checkbox"
+                                            id="hookCookie"
+                                            class="cursor-no-drop"
+                                            style="pointer-events: none;"
+                                    >
+                                </div>
+                                <label for="hookCookie" class="cursor-pointer ml-3 block text-cyan-100"
+                                       id="BhookCookie">
+                                    Cookie拦截
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript" src="js/jquery-1.8.3.js"></script>
 <script src="bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="js/background.js"></script>
+<script type="text/javascript" src="js/js/tailwind.js"></script>
 <script type="text/javascript" src="js/popup.js"></script>
 </body>
 </html>
