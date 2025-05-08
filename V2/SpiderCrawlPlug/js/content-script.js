@@ -528,11 +528,12 @@ Hook('${e}',);
 function injectHookCookie(e) {
     const script = document.createElement('script');
     script.textContent = `
+const iframe = document.createElement('iframe');
+iframe.style.display = 'none';
+document.body.appendChild(iframe);
+const log = iframe.contentWindow.console.log;
 function Hook(e) {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    const log = iframe.contentWindow.console.log;
+
 var cookie_cache = document.cookie;
 
 Object.defineProperty(document, 'cookie', {
