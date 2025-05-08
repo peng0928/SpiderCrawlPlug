@@ -34,7 +34,7 @@ chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCo
     }
     if (hookCookie) {
         // 确保DOM加载后注入
-        console.log("------------------正在监听XHR请求------------------")
+        console.log("------------------正在Hook Cookie------------------")
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', injectHookCookie(HookInput));
         } else {
@@ -488,7 +488,6 @@ function Hook(e) {
                         response: response
                     });
                     console.log('-'.repeat(180));
-                    console.log(\n\n);
                     // 如果需要，可以在这里触发自定义事件
                     const event = new CustomEvent('xhrHookResponse', {
                         detail: {
