@@ -404,12 +404,11 @@ window.fetch = async function(...args) {
 // 请求拦截
 let requestInfo = args[0];
 let requestInit = args[1] || {};
-console.group('Fetch Hook');
-console.log('请求URL:', typeof requestInfo === 'string' ? requestInfo : requestInfo.url);
-console.log('请求方法:', requestInit.method || 'GET');
-console.log('请求头:', requestInit.headers || {});
-console.log('请求体:', requestInit.body);
-
+log('%c[Fetch Request]', 'color: blue; font-weight: bold');
+log('请求URL:', typeof requestInfo === 'string' ? requestInfo : requestInfo.url);
+log('请求方法:', requestInit.method || 'GET');
+log('请求头:', requestInit.headers || {});
+log('请求体:', requestInit.body);
 // 开始时间记录
 const startTime = Date.now();
 
@@ -418,23 +417,27 @@ try {
   
   // 克隆响应以便读取而不影响原始流
   const clonedResponse = response.clone();
+  const textResponse = response.clone();
   
   // 响应拦截
-  console.log('响应状态:', clonedResponse.status);
-  console.log('响应头:', Object.fromEntries(clonedResponse.headers.entries()));
   
   // 读取响应体
   const data = await clonedResponse.json().catch(() => null);
-  console.log('响应体:', data);
+  const text = await textResponse.text().catch(() => null);
+  const content = data || text;
+  log('%c[Fetch Response]', 'color: red; font-weight: bold');
+  log('响应状态:', clonedResponse.status);
+  log('响应头:', Object.fromEntries(clonedResponse.headers.entries()));
+  log('响应体:', content);
   
   // 计算请求耗时
   const endTime = Date.now();
-  console.log('请求耗时:', endTime - startTime + 'ms');
-  
+  log('请求耗时:', endTime - startTime + 'ms');
+  log('-'.repeat(180));
   console.groupEnd();
   return response;
 } catch (error) {
-  console.error('请求错误:', error);
+  log('请求错误:', error);
   console.groupEnd();
   throw error;
 }
