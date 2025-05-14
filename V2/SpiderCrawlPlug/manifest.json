@@ -29,7 +29,7 @@
       "css": [
         "css/custom.css"
       ],
-      "run_at": "document_end"
+      "run_at": "document_start"
     },
     {
       "matches": [
@@ -58,7 +58,7 @@
   "web_accessible_resources": [
     "js/inject.js"
   ],
-    //  "homepage_url": "https://www.baidu.com",
+  //  "homepage_url": "https://www.baidu.com",
   //  "chrome_url_overrides": {
   //    "newtab": "newtab.html"
   //  },

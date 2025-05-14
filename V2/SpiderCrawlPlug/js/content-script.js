@@ -48,7 +48,7 @@ function injectHookJson(e) {
     script.textContent = `
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    document.documentElement.appendChild(iframe);
     let log = iframe.contentWindow.console.log;
     function HJSOn(e) {
 
@@ -151,7 +151,7 @@ function injectHookUrl(e) {
   function Hook(e) {
       const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    document.documentElement.appendChild(iframe);
     const log = iframe.contentWindow.console.log;
   const urlHooks = {
     original: {
@@ -395,8 +395,53 @@ function injectHookXhr(e) {
     script.textContent = `
 const iframe = document.createElement('iframe');
 iframe.style.display = 'none';
-document.body.appendChild(iframe);
+document.documentElement.appendChild(iframe);
 const log = iframe.contentWindow.console.log;
+
+function HookFetch(e) {
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+// 请求拦截
+let requestInfo = args[0];
+let requestInit = args[1] || {};
+console.group('Fetch Hook');
+console.log('请求URL:', typeof requestInfo === 'string' ? requestInfo : requestInfo.url);
+console.log('请求方法:', requestInit.method || 'GET');
+console.log('请求头:', requestInit.headers || {});
+console.log('请求体:', requestInit.body);
+
+// 开始时间记录
+const startTime = Date.now();
+
+try {
+  const response = await originalFetch.apply(this, args);
+  
+  // 克隆响应以便读取而不影响原始流
+  const clonedResponse = response.clone();
+  
+  // 响应拦截
+  console.log('响应状态:', clonedResponse.status);
+  console.log('响应头:', Object.fromEntries(clonedResponse.headers.entries()));
+  
+  // 读取响应体
+  const data = await clonedResponse.json().catch(() => null);
+  console.log('响应体:', data);
+  
+  // 计算请求耗时
+  const endTime = Date.now();
+  console.log('请求耗时:', endTime - startTime + 'ms');
+  
+  console.groupEnd();
+  return response;
+} catch (error) {
+  console.error('请求错误:', error);
+  console.groupEnd();
+  throw error;
+}
+};
+
+console.log('Fetch hook已安装');
+}
 function Hook(e) {
     // 保存原始的XMLHttpRequest对象
     const originalXHR = window.XMLHttpRequest;
@@ -519,7 +564,8 @@ function Hook(e) {
     };
 }
 log('%cXHR Hook 已安装', 'color: #4CAF50; font-weight: bold');
-Hook('${e}',);
+Hook('${e}');
+HookFetch('${e}');
 `;
     document.documentElement.appendChild(script);
     script.remove();
@@ -530,7 +576,7 @@ function injectHookCookie(e) {
     script.textContent = `
 const iframe = document.createElement('iframe');
 iframe.style.display = 'none';
-document.body.appendChild(iframe);
+document.documentElement.appendChild(iframe);
 const log = iframe.contentWindow.console.log;
 function Hook(e) {
 
