@@ -12,7 +12,6 @@ chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCo
     hookXhr = result.hookXhr;
     hookCookie = result.hookCookie;
     hookType = result.hookType;
-    console.log('hookType', hookType);
     if (hookType !== 'document end') {
         return
     }
