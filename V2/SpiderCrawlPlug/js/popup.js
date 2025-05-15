@@ -20,9 +20,7 @@ chrome.storage.local.get('spiderSwitch', function (result) {
         }
     } catch {
     }
-
 });
-
 chrome.storage.local.get('hookJson', function (result) {
     result = result.hookJson;
     try {
@@ -74,6 +72,20 @@ chrome.storage.local.get('hookCookie', function (result) {
         } else {
             // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
             document.getElementById('hookCookie').checked = false;
+        }
+    } catch {
+    }
+
+});
+chrome.storage.local.get('hookType', function (result) {
+    result = result.hookType;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookType').value = result;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookType').value = result;
         }
     } catch {
     }
@@ -140,6 +152,18 @@ $("#BhookCookie").click((e) => {
     }
 
 });
+
+const selectElement = document.getElementById('hookType');
+selectElement.addEventListener('change', function () {
+    // 获取当前选中的值
+    const selectedValue = this.value;
+
+    // 保存到localStorage
+    chrome.storage.local.set({hookType: this.value}, function () {
+    });
+    console.log('选项已保存:', selectedValue);
+});
+
 // 打开后台页
 $("#open_background").click((e) => {
     window.open(chrome.extension.getURL("bgVue.html"));
