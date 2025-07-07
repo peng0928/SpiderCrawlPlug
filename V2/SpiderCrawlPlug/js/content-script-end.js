@@ -5,13 +5,14 @@
     }
 });
 
-chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCookie', 'hookType'], function (result) {
+chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCookie', 'hookType', 'hookDebug'], function (result) {
     hookJson = result.hookJson;
     HookInput = String(result.HookInput);
     hookUrl = result.hookUrl;
     hookXhr = result.hookXhr;
     hookCookie = result.hookCookie;
     hookType = result.hookType;
+    hookDebug = result.hookDebug;
     if (hookType !== 'document end') {
         return
     }
@@ -45,6 +46,12 @@ chrome.storage.local.get(['hookJson', 'HookInput', 'hookUrl', 'hookXhr', 'hookCo
             injectHookCookie(HookInput);
         }
     }
+    if (hookDebug) {
+        // 确保DOM加载后注入
+        console.log("------------------正在Hook hookDebugger------------------")
+        injectHookDebugger()
+    }
+
 });
 
 function injectHookJson(e) {
@@ -604,4 +611,294 @@ Object.defineProperty(document, 'cookie', {
 `;
     document.documentElement.appendChild(script);
     script.remove();
+}
+
+function injectHookDebugger() {
+    'use strict';
+    // 立即注入主页面
+    injectScript(window);
+
+    // 同步监听DOM变化，避免等待事件循环
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.tagName === "IFRAME") {
+                    // 立即尝试注入，不等待iframe加载完成
+                    try {
+                        injectScript(node.contentWindow);
+                    } catch (e) {
+                        console.log(e);
+                    } // 跨域静默失败
+                    // 同时绑定load事件作为兜底
+                    node.addEventListener('load', () => {
+                        try {
+                            injectScript(node.contentWindow);
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+    // 在document元素上立即开始监听（早于body存在）
+    observer.observe(document.documentElement, {
+        childList: true, subtree: true
+    });
+    Array.from(document.getElementsByTagName('iframe')).forEach(iframe => {
+        try {
+            if (iframe.contentWindow) injectScript(iframe.contentWindow);
+        } catch (e) {
+            console.log(e);
+        }
+    });
+}
+
+function injectScript(targetWindow) {
+    try {
+        const script = targetWindow.document.createElement('script');
+        script.textContent = `(${injectionCode.toString()})(window);`; // 内联关键代码
+        targetWindow.document.documentElement.appendChild(script);
+        script.remove();
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+// 内联的注入脚本核心逻辑
+function injectionCode(currentWindow) {
+    'use strict';
+    console.log("Injected script is running in", currentWindow.location.href);
+    if (!window.top.MY_EXTENSION_FUNC_) {
+        window.top.MY_EXTENSION_FUNC_ = {
+            'Array_isArray': window.top.Array.isArray,
+            'Array_prototype_forEach': window.top.Array.prototype.forEach,
+            'Array_prototype_indexOf': window.top.Array.prototype.indexOf,
+            'Array_prototype_join': window.top.Array.prototype.join,
+            'Array_prototype_shift': window.top.Array.prototype.shift,
+            'Array_prototype_some': window.top.Array.prototype.some,
+            'Blob': window.top.Blob,
+            'CompositionEvent': window.top.CompositionEvent,
+            'CustomEvent': window.top.CustomEvent,
+            'CustomEvent_prototype_AT_TARGET': window.top.CustomEvent.prototype.AT_TARGET,
+            'DOMParser': window.top.DOMParser,
+            'DOMParser_prototype_parseFromString': window.top.DOMParser.prototype.parseFromString,
+            'Date_now': window.top.Date.now,
+            'Document_prototype_createElementNS': window.top.Document.prototype.createElementNS,
+            'Document_prototype_getElementsByTagName': window.top.Document.prototype.getElementsByTagName,
+            'Element_prototype_remove': window.top.Element.prototype.remove,
+            'Element_prototype_removeAttribute': window.top.Element.prototype.removeAttribute,
+            'Element_prototype_setAttribute': window.top.Element.prototype.setAttribute,
+            'Error': window.top.Error,
+            'FileReader': window.top.FileReader,
+            'FileReader_prototype_readAsBinaryString': window.top.FileReader.prototype.readAsBinaryString,
+            'FileReader_prototype_readAsText': window.top.FileReader.prototype.readAsText,
+            'Function': window.top.Function,
+            'Function_toString': window.top.Function.toString,
+            'JSON_parse': window.top.JSON.parse,
+            'JSON_stringify': window.top.JSON.stringify,
+            'KeyboardEvent': window.top.KeyboardEvent,
+            'Math_floor': window.top.Math.floor,
+            'Math_max': window.top.Math.max,
+            'Math_min': window.top.Math.min,
+            'Math_random': window.top.Math.random,
+            'MouseEvent': window.top.MouseEvent,
+            'MutationObserver': window.top.MutationObserver,
+            'MutationObserver_prototype_disconnect': window.top.MutationObserver.prototype.disconnect,
+            'Number': window.top.Number,
+            'Number_MAX_SAFE_INTEGER': window.top.Number.MAX_SAFE_INTEGER,
+            'Number_prototype_toString': window.top.Number.prototype.toString,
+            'Object_apply': window.top.Object.apply,
+            'Object_bind': window.top.Object.bind,
+            'Object_defineProperties': window.top.Object.defineProperties,
+            'Object_defineProperty': window.top.Object.defineProperty,
+            'Object_getOwnPropertyDescriptors': window.top.Object.getOwnPropertyDescriptors,
+            'Object_getOwnPropertyNames': window.top.Object.getOwnPropertyNames,
+            'Object_hasOwnProperty': window.top.Object.hasOwnProperty,
+            'Object_keys': window.top.Object.keys,
+            'Object_prototype_hasOwnProperty': window.top.Object.prototype.hasOwnProperty,
+            'Object_prototype_toString': window.top.Object.prototype.toString,
+            'Object_values': window.top.Object.values,
+            'Promise': window.top.Promise,
+            'Promise_prototype_catch': window.top.Promise.prototype.catch,
+            'Promise_prototype_constructor': window.top.Promise.prototype.constructor,
+            'Promise_prototype_then': window.top.Promise.prototype.then,
+            'Proxy': window.top.Proxy,
+            'ReadableStream': window.top.ReadableStream,
+            'RegExp': window.top.RegExp,
+            'String': window.top.String,
+            'String_fromCharCode': window.top.String.fromCharCode,
+            'String_prototype_charCodeAt': window.top.String.prototype.charCodeAt,
+            'String_prototype_indexOf': window.top.String.prototype.indexOf,
+            'String_prototype_replace': window.top.String.prototype.replace,
+            'String_prototype_replaceAll': window.top.String.prototype.replaceAll,
+            'String_prototype_slice': window.top.String.prototype.slice,
+            'String_prototype_split': window.top.String.prototype.split,
+            'String_prototype_substr': window.top.String.prototype.substr,
+            'String_prototype_toLowerCase': window.top.String.prototype.toLowerCase,
+            'String_prototype_toUpperCase': window.top.String.prototype.toUpperCase,
+            'String_prototype_trim': window.top.String.prototype.trim,
+            'Symbol_toStringTag': window.top.Symbol.toStringTag,
+            'Symbol_unscopables': window.top.Symbol.unscopables,
+            'URLSearchParams_prototype_toString': window.top.URLSearchParams.prototype.toString,
+            'URL_createObjectURL': window.top.URL.createObjectURL,
+            'URL_revokeObjectURL': window.top.URL.revokeObjectURL,
+            'Uint8Array': window.top.Uint8Array,
+            'Window': window.top.Window,
+            'XMLHttpRequest': window.top.XMLHttpRequest,
+            'XMLHttpRequest_prototype_DONE': window.top.XMLHttpRequest.prototype.DONE,
+            'XMLHttpRequest_prototype_HEADERS_RECEIVED': window.top.XMLHttpRequest.prototype.HEADERS_RECEIVED,
+            'XMLHttpRequest_prototype_LOADING': window.top.XMLHttpRequest.prototype.LOADING,
+            'XMLHttpRequest_prototype_OPENED': window.top.XMLHttpRequest.prototype.OPENED,
+            'XMLHttpRequest_prototype_UNSENT': window.top.XMLHttpRequest.prototype.UNSENT,
+            'XMLHttpRequest_prototype_open': window.top.XMLHttpRequest.prototype.open,
+            'XMLHttpRequest_prototype_send': window.top.XMLHttpRequest.prototype.send,
+            'addEventListener': window.top.addEventListener,
+            'alert': window.top.alert,
+            'atob': window.top.atob,
+            'btoa': window.top.btoa,
+            'clearInterval': window.top.clearInterval,
+            'clearTimeout': window.top.clearTimeout,
+            'close': window.top.close,
+            'confirm': window.top.confirm,
+            'console_assert': window.top.console.assert,
+            'console_clear': window.top.console.clear,
+            'console_context': window.top.console.context,
+            'console_count': window.top.console.count,
+            'console_countReset': window.top.console.countReset,
+            'console_createTask': window.top.console.createTask,
+            'console_debug': window.top.console.debug,
+            'console_dir': window.top.console.dir,
+            'console_dirxml': window.top.console.dirxml,
+            'console_error': window.top.console.error,
+            'console_group': window.top.console.group,
+            'console_groupCollapsed': window.top.console.groupCollapsed,
+            'console_groupEnd': window.top.console.groupEnd,
+            'console_info': window.top.console.info,
+            'console_log': window.top.console.log,
+            'console_memory': window.top.console.memory,
+            'console_profile': window.top.console.profile,
+            'console_profileEnd': window.top.console.profileEnd,
+            'console_table': window.top.console.table,
+            'console_time': window.top.console.time,
+            'console_timeEnd': window.top.console.timeEnd,
+            'console_timeLog': window.top.console.timeLog,
+            'console_timeStamp': window.top.console.timeStamp,
+            'console_trace': window.top.console.trace,
+            'console_warn': window.top.console.warn,
+            'decodeURI': window.top.decodeURI,
+            'decodeURIComponent': window.top.decodeURIComponent,
+            'dispatchEvent': window.top.dispatchEvent,
+            'encodeURI': window.top.encodeURI,
+            'encodeURIComponent': window.top.encodeURIComponent,
+            'escape': window.top.escape,
+            'eval': window.top.eval,
+            'parseFloat': window.top.parseFloat,
+            'parseInt': window.top.parseInt,
+            'postMessage': window.top.postMessage,
+            'prompt': window.top.prompt,
+            'removeEventListener': window.top.removeEventListener,
+            'setInterval': window.top.setInterval,
+            'setTimeout': window.top.setTimeout,
+            'unescape': window.top.unescape,
+        };
+        (function () {
+            'use strict';
+            const isString = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object String]';
+            const isArray = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object Array]';
+            const isObject = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object Object]';
+
+            function removeDebuggerFromString(str) {
+                if (str.includes('debugger')) {
+                    if (window.top.MY_EXTENSION_FUNC_.my_print) {
+                        window.top.MY_EXTENSION_FUNC_.console_log(`hook debugger -> "${str}"`);
+                    }
+                }
+                return str.replace(/(^|[^a-zA-Z0-9$_])debugger;?([^a-zA-Z0-9$_]|$)/g, '$1$2').replace(/\\x64\\x65\\x62\\x75\\x67\\x67\\x65\\x72/g, '').replace(/(d|D)(e|E)(b|B)(u|U)(g|G){2}(e|E)(r|R)/g, '');
+            }
+
+            function removeDebuggerFromArray(arr, visited) {
+                return arr.map((item) => removeDebugger(item, visited));
+            }
+
+            function removeDebuggerFromObject(obj, visited) {
+                if (visited.has(obj)) return obj;
+                visited.add(obj);
+                const result = {};
+                for (const key in obj) {
+                    if (window.top.MY_EXTENSION_FUNC_.Object_prototype_hasOwnProperty.call(obj, key)) {
+                        result[key] = removeDebugger(obj[key], visited);
+                    }
+                }
+                return result;
+            }
+
+            function removeDebugger(obj, visited = new WeakSet()) {
+                if (isString(obj)) {
+                    return removeDebuggerFromString(obj);
+                } else if (isArray(obj)) {
+                    return removeDebuggerFromArray(obj, visited);
+                } else if (isObject(obj)) {
+                    return removeDebuggerFromObject(obj, visited);
+                }
+                return obj;
+            }
+
+            window.top.MY_EXTENSION_FUNC_.removeDebugger = removeDebugger;
+        })();
+    } else {
+        window.top.MY_EXTENSION_FUNC_.console_log('already exist original_window');
+    }
+
+
+    (function (current_window) {
+        'use strict';
+        window.top.MY_EXTENSION_FUNC_.my_print = 1;
+
+        function creat_proxy(func_list) {
+            const originalfunc = func_list[0][func_list[1]];
+            window.top.MY_EXTENSION_FUNC_.Object_defineProperty(func_list[0], func_list[1], {
+                value: new window.top.MY_EXTENSION_FUNC_.Proxy(originalfunc, {
+                    apply(target, thisArg, argumentsList) {
+                        for (var i = 0; i < argumentsList.length; i++) {
+                            argumentsList[i] = window.top.MY_EXTENSION_FUNC_.removeDebugger(argumentsList[i]);
+                        }
+                        return Reflect.apply(target, thisArg, argumentsList);
+                    },
+                }), enumerable: 1,
+            })
+        }
+
+        var hook_list = [[current_window, 'eval'], [current_window, 'Function'], [current_window.Function.prototype, 'constructor'], [current_window, 'setInterval'], [current_window, 'setTimeout']];
+        for (var i = 0; i < hook_list.length; i++) {
+            creat_proxy(hook_list[i]);
+        }
+        ;
+
+        (function () {
+            'use strict';
+            window.top.MY_EXTENSION_FUNC_.Object_defineProperty(current_window.console, 'clear', {
+                value: new window.top.MY_EXTENSION_FUNC_.Proxy(current_window.console.clear, {
+                    apply(target, thisArg, argumentsList) {
+                        window.top.MY_EXTENSION_FUNC_.console_log('apply clear');
+                        return;
+                    }
+                }), enumerable: 1,
+            })
+        }());
+        (function () {
+            'use strict';
+            window.top.MY_EXTENSION_FUNC_.Object_defineProperty(current_window.Math, 'random', {
+                value: new window.top.MY_EXTENSION_FUNC_.Proxy(current_window.Math.random, {
+                    apply(target, thisArg, argumentsList) {
+                        // window.top.MY_EXTENSION_FUNC_.console_log('apply random');
+                        return 0.5;
+                    },
+                }), enumerable: 1,
+            });
+        }());
+
+    }(currentWindow));
+    window.top.MY_EXTENSION_FUNC_.console_log('over!');
 }

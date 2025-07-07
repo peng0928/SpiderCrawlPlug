@@ -75,7 +75,6 @@ chrome.storage.local.get('hookCookie', function (result) {
         }
     } catch {
     }
-
 });
 chrome.storage.local.get('hookType', function (result) {
     result = result.hookType;
@@ -90,6 +89,19 @@ chrome.storage.local.get('hookType', function (result) {
     } catch {
     }
 
+});
+chrome.storage.local.get('hookDebug', function (result) {
+    result = result.hookDebug;
+    try {
+        if (result) {
+            // 如果 spiderSwitch 为真，则设置 id 为 'exampleCheck1' 的 checkbox 为选中状态
+            document.getElementById('hookDebug').checked = true;
+        } else {
+            // 如果 spiderSwitch 为假，则设置 id 为 'exampleCheck1' 的 checkbox 为未选中状态
+            document.getElementById('hookDebug').checked = false;
+        }
+    } catch {
+    }
 });
 
 $("#openCheck").click((e) => {
@@ -148,6 +160,18 @@ $("#BhookCookie").click((e) => {
         });
     } else {
         chrome.storage.local.set({hookCookie: true}, function () {
+        });
+    }
+
+});
+$("#BhookDebugger").click((e) => {
+    // 获取复选框的选中状态
+    var isChecked = $("#hookDebug").prop('checked');
+    if (isChecked) {
+        chrome.storage.local.set({hookDebug: false}, function () {
+        });
+    } else {
+        chrome.storage.local.set({hookDebug: true}, function () {
         });
     }
 
