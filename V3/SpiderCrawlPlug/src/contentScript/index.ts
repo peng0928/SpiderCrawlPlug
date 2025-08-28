@@ -31,7 +31,6 @@ chrome.storage.sync.get(['spiderSwitch', 'hookJson', 'hookInput', 'hookUrl', 'ho
     hookType: result.hookType,
     hookDebug: result.hookDebug,
   });
-  console.log('result.hookType', result.hookType)
   if (result.hookType === 'document start') {
     // 确保DOM加载后注入
     hook()

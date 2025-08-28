@@ -549,15 +549,14 @@ const DataPackage = (e: any) => {
   console.log(requestObject.value)
   visible.value = true
 }
-const UpdateInFormat = () => {
+const UpdateInFormat = (e:any) => {
   const selectetype = FormatValue.value;
   const formattedValue = {};
-  if (FormatInput.value) {
+  if (e) {
     if (selectetype === "Cookie") {
-      console.log(FormatInput)
       try {
         try {
-          const cookieArray = JSON.parse(FormatInput.value);
+          const cookieArray = JSON.parse(e);
           if (Array.isArray(cookieArray)) {
             cookieArray.forEach((cookie) => {
               formattedValue[cookie.name] = cookie.value;
@@ -579,7 +578,7 @@ const UpdateInFormat = () => {
       }
     }
     if (selectetype === "Header") {
-      const inputdata = FormatInput.value
+      const inputdata = e
           .replaceAll(":\n", ":")
           .replaceAll("：\n", ":");
       console.log(inputdata);
@@ -591,7 +590,7 @@ const UpdateInFormat = () => {
     }
     if (selectetype === "JSon") {
       try {
-        const inputdata = JSON.parse(FormatInput.value);
+        const inputdata = JSON.parse(e);
         FormatOutput.value = inputdata;
       } catch (e) {
         console.log(e);
@@ -602,6 +601,65 @@ const UpdateInFormat = () => {
     FormatOutput.value = "";
   }
   FormatOutput.value = JSON.stringify(FormatOutput.value, null, 2);
+  console.log('FormatOutput', e, FormatOutput.value)
+
+};
+const UpselectFormat = () => {
+  const e =  FormatInput.value
+  console.log('input', e, FormatInput.value)
+  const selectetype = FormatValue.value;
+  const formattedValue = {};
+  if (e) {
+    if (selectetype === "Cookie") {
+      try {
+        try {
+          const cookieArray = JSON.parse(e);
+          if (Array.isArray(cookieArray)) {
+            cookieArray.forEach((cookie) => {
+              formattedValue[cookie.name] = cookie.value;
+            });
+            FormatOutput.value = formattedValue;
+          } else {
+            FormatOutput.value = "格式错误"
+          }
+        } catch (error) {
+          FormatInput.value.split(";").forEach((item) => {
+            const [key, value] = item.trim().split("=");
+            formattedValue[key] = value;
+          });
+          FormatOutput.value = formattedValue;
+        }
+      } catch (error) {
+        console.error("无法解析输入的 JSON 字符串", error);
+        FormatOutput.value = "格式错误"
+      }
+    }
+    if (selectetype === "Header") {
+      const inputdata = e
+          .replaceAll(":\n", ":")
+          .replaceAll("：\n", ":");
+      console.log(inputdata);
+      inputdata.split("\n").forEach((item) => {
+        const [key, value] = item.replace(":", "&&&").split("&&&");
+        formattedValue[key] = value
+      });
+      FormatOutput.value = formattedValue;
+    }
+    if (selectetype === "JSon") {
+      try {
+        const inputdata = JSON.parse(e);
+        FormatOutput.value = inputdata;
+      } catch (e) {
+        console.log(e);
+        FormatOutput.value = "";
+      }
+    }
+  } else {
+    FormatOutput.value = "";
+  }
+  FormatOutput.value = JSON.stringify(FormatOutput.value, null, 2);
+  console.log('FormatOutput', e, FormatOutput.value)
+
 };
 const copyToClipboard = () => {
   const fakeTextArea = document.createElement("textarea");
@@ -915,45 +973,47 @@ const try_parse = (e: any) => {
             <a-tabs>
               <a-tab-pane key="ToolBoxFormat" title="cookie格式化">
                 <!-- 顶部工具栏 -->
-                <a-row justify="space-between" align="center" style="margin-bottom: 0">
-                  <a-col>
-                    <a-select
-                        v-model="FormatValue"
-                        placeholder="格式化类型"
-                        :style="{ minWidth: '500px' }"
-                        @change="UpdateInFormat"
-                    >
-                      <a-option value="Cookie">Cookie</a-option>
-                      <a-option value="Header">Header</a-option>
-                      <a-option value="JSon">JSon</a-option>
-                    </a-select>
-                  </a-col>
+                <div class="flex justify-between">
+                  <a-select
+                      :style="{width:'320px'}"
+                      v-model="FormatValue"
+                      placeholder="格式化类型"
+                      @change="UpselectFormat"
+                  >
+                    <a-option value="Cookie">Cookie</a-option>
+                    <a-option value="Header">Header</a-option>
+                    <a-option value="JSon">JSon</a-option>
+                  </a-select>
 
-                  <a-col>
-                    <a-space>
-                      <a-button type="primary" @click="copyToClipboard">复制 JSON</a-button>
-                      <a-button type="primary" @click="copyToCStr">复制 字符串</a-button>
-                      <a-button type="primary" @click="copyToCys">压缩</a-button>
-                    </a-space>
-                  </a-col>
-                </a-row>
-
+                  <a-space>
+                    <a-button type="primary" @click="copyToClipboard">复制 JSON</a-button>
+                    <a-button type="primary" @click="copyToCStr">复制 字符串</a-button>
+                    <a-button type="primary" @click="copyToCys">压缩</a-button>
+                  </a-space>
+                </div>
                 <!-- 输入/输出区域 -->
-                <a-row :style="{ height: 'calc(90vh - 5%)' }">
-                  <a-col :span="12">
+                <div class="mt-5 flex justify-between">
+                  <div class="w-[48%]">
                     <a-textarea
-                        v-model="FormatInput"
+                        v-model:model-value="FormatInput"
                         :placeholder="textLabel.a"
-                        :rows="23"
+                        :auto-size="{
+                              minRows:23,
+                              maxRows:23
+                            }"
                         allow-clear
                         @input="UpdateInFormat"
                     />
-                  </a-col>
+                  </div>
 
-                  <a-col :span="12" style="overflow-y: auto">
-                    <div class="output" v-html="FormatOutput"/>
-                  </a-col>
-                </a-row>
+                  <div class="text-left ml-5 w-[48%]">
+                    <JsonViewer
+                        :data="try_parse(FormatOutput)"
+                        :darkMode="true"
+                        class="break-all max-h-[688px] overflow-y-auto w-full">
+                    </JsonViewer>
+                  </div>
+                </div>
               </a-tab-pane>
 
               <!-- 2. ToolBoxPdf -->

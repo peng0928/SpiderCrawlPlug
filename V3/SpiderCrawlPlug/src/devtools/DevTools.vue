@@ -11,7 +11,7 @@ let db_name = 'SpiderCrawlData';
 let spiderSwitch = null;
 let requestHook = null;
 log('SpiderCrawl db_version:', db_version, 'db_name:', db_name)
-log('DevTools Page')
+// log('DevTools Page')
 
 chrome.devtools.network.onRequestFinished.addListener(async (...args) => {
   chrome.storage.sync.get(['spiderSwitch', 'hookRequest'], (result) => {

@@ -76,10 +76,10 @@ onMounted(() => {
               </div>
               <!-- 带图标的精致选择框 -->
               <div class="">
-                <label class="block text-md font-medium  mb-1">run_at</label>
+                <label class="block text-md font-medium  mb-1">注入方式</label>
                 <a-select placeholder="Please select ..." v-model:model-value="hookType" @change="setAll">
-                  <a-option>document start</a-option>
-                  <a-option>document end</a-option>
+                  <a-option value="document start">开始渲染注入</a-option>
+                  <a-option value="document end">渲染完成注入</a-option>
                 </a-select>
               </div>
 

@@ -5,7 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6438ebd7-a599-4ba1-840c-474558348dfe" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/../../V2/SpiderCrawlPlug/bgVue.html" beforeDir="false" afterPath="$PROJECT_DIR$/../../V2/SpiderCrawlPlug/bgVue.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../img/1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../img/2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/contentScript/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/contentScript/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/devtools/DevTools.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/devtools/DevTools.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/options/Options.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/options/Options.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/popup/Popup.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/popup/Popup.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,7 +94,7 @@
       <option name="presentableId" value="Default" />
       <updated>1756185098639</updated>
       <workItem from="1756185099692" duration="21495000" />
-      <workItem from="1756261199970" duration="19596000" />
+      <workItem from="1756261199970" duration="23703000" />
     </task>
     <servers />
   </component>
