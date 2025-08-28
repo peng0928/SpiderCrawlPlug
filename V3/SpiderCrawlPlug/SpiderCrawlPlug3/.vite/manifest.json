@@ -36,7 +36,7 @@
     ]
   },
   "options.html": {
-    "file": "assets/chunk-CZuf5xEN.js",
+    "file": "assets/chunk-rOn5q46S.js",
     "name": "options.html",
     "src": "options.html",
     "isEntry": true,
@@ -45,11 +45,11 @@
       "_chunk-DBzfZ1E2.js"
     ],
     "css": [
-      "assets/options-CBmr1NQp.css"
+      "assets/options-BeXM_nuM.css"
     ]
   },
   "popup.html": {
-    "file": "assets/chunk-DmC-OrBJ.js",
+    "file": "assets/chunk-CXa2PVw0.js",
     "name": "popup.html",
     "src": "popup.html",
     "isEntry": true,
@@ -58,7 +58,7 @@
       "_chunk-DBzfZ1E2.js"
     ],
     "css": [
-      "assets/popup-BlpGO4Jb.css"
+      "assets/popup-27rAwz6i.css"
     ]
   },
   "sidepanel.html": {

@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import {ref, reactive, onMounted, computed} from 'vue'
-import {Message} from '@arco-design/web-vue';
-import {IconHome, IconCalendar,} from '@arco-design/web-vue/es/icon';
-import {Icon} from '@arco-design/web-vue';
-import {JsonViewer} from '@anilkumarthakur/vue3-json-viewer';
-import '@anilkumarthakur/vue3-json-viewer/styles.css';
+import { ref, reactive, onMounted, computed } from 'vue'
+import { Message } from '@arco-design/web-vue'
+import { IconHome, IconCalendar } from '@arco-design/web-vue/es/icon'
+import { Icon } from '@arco-design/web-vue'
+import { JsonViewer } from '@anilkumarthakur/vue3-json-viewer'
+import '@anilkumarthakur/vue3-json-viewer/styles.css'
 
-const IconFont = Icon.addFromIconFontCn({src: '../../public/js/icon.js'});
+const IconFont = Icon.addFromIconFontCn({ src: './js/icon.js' })
 
-const tabName = ref('NetWork');
-const spiderSwitch = ref(false);
-const searchValue = ref("");
-const NetWorkData = ref([]);
-const lastProcessedIds = ref(new Set());
-const collapsed = ref(false);
+const tabName = ref('NetWork')
+const spiderSwitch = ref(false)
+const searchValue = ref('')
+const NetWorkData = ref([])
+const lastProcessedIds = ref(new Set())
+const collapsed = ref(false)
 const columns = [
   {
     title: '序号',
     dataIndex: 'index',
     width: 66,
-    slotName: 'ind'
+    slotName: 'ind',
   },
   {
     title: '时间',
@@ -34,8 +34,8 @@ const columns = [
     title: 'code',
     dataIndex: 'code', slotName: 'code',
     sortable: {
-      sortDirections: ['ascend', 'descend']
-    }
+      sortDirections: ['ascend', 'descend'],
+    },
   },
   {
     title: 'method',
@@ -57,7 +57,7 @@ const columns = [
   {
     title: 'size',
     dataIndex: 'Size',
-    slotName: 'size'
+    slotName: 'size',
   },
   {
     title: 'type',
@@ -92,127 +92,320 @@ const columns = [
 
       ],
       filter: (value: any, row: any) => row.type.includes(value),
-    }
+    },
   },
   {
     title: 'version',
     dataIndex: 'version',
     slotName: 'version',
-    width: 158
+    width: 158,
   },
 ]
 const rowSelection = reactive({
   type: 'checkbox',
   showCheckedAll: true,
   onlyCurrent: false,
-});
-const setAll = () => {
-  chrome.storage.sync.set({spiderSwitch: spiderSwitch.value})
+})
+
+const contextMenu = ref({
+  visible: false,
+  left: 0,
+  top: 0,
+  row: null,
+  index: -1,
+})
+const closeContextMenu = () => {
+  contextMenu.value.visible = false
+  document.removeEventListener('click', closeContextMenu)
 }
-const selectedKeys = ref([]);
+const handleRowClass = () => {
+  return 'bg-green-200'
+}
+const handleRightClick = (row: any, event: any) => {
+  const top = window.innerHeight - event.clientY > 200 ? event.clientY : event.clientY - 200
+  event.preventDefault() // 阻止默认右键菜单
+  contextMenu.value = {
+    visible: true,
+    left: event.clientX,
+    top: top,
+    row,
+    index: filteredData.value.indexOf(row),
+  }
+  document.addEventListener('click', closeContextMenu)
+}
+const setAll = () => {
+  chrome.storage.sync.set({ spiderSwitch: spiderSwitch.value })
+}
+const selectedKeys = ref([])
 const onCollapse = (val, type) => {
-  const content = type === 'responsive' ? '触发响应式收缩' : '点击触发收缩';
+  const content = type === 'responsive' ? '触发响应式收缩' : '点击触发收缩'
   // Message.info({
   //   content,
   //   duration: 2000,
   // });
-  collapsed.value = val;
+  collapsed.value = val
 }
 
+const try_stringify = (e) => {
+  try {
+    e = JSON.stringify(e)
+  } catch (err) {
+  }
+  return e
+}
+const actionVal = ref('')
+const handleMenuClick = async (action: string) => {
+  closeContextMenu()
+  actionVal.value = action
+  dbFindById(contextMenu.value.row.id, callback_data)
+}
+const callback_data = (e: any) => {
+  let postData
+  let CookieItem = {}
+  let HeaderItem = {}
+  const action = actionVal.value
+  const request = e.request
+  const cookie = e.response.cookies
+  const headers = request.headers
+  try {
+    postData = e.request.postData.text
+    postData = try_parse(postData)
+  } catch {
+    postData = ''
+  }
+  switch (action) {
+    case 'cookie':
+      const cookieArray = try_parse(cookie)
+      if (Array.isArray(cookieArray)) {
+        cookieArray.forEach((cookie) => {
+          CookieItem[cookie.name] = cookie.value
+        })
+      }
+      copyApi(CookieItem)
+      break
+    case 'header':
+      const HeaderArray = try_parse(headers)
+      if (Array.isArray(HeaderArray)) {
+        HeaderArray.forEach((cookie) => {
+          HeaderItem[cookie.name] = cookie.value
+        })
+      }
+      copyApi(HeaderItem)
+      break
+    case 'params':
+      copyApi(postData)
+      // 复制逻辑
+      break
+    case 'curl':
+      handleCurlStr(request)
+      // 复制逻辑
+      break
+    case 'request':
+      const curlStr = curlApi(request)
+      const result = curlToPython(curlStr)
+      copyApi(result)
+      break
+  }
+}
+
+function curlToPython(curl: string): string {
+    let method: string = 'GET';
+    const methodMatch = curl.match(/-X\s+(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)/i);
+    if (methodMatch) {
+        method = methodMatch[1].toUpperCase();
+    } else if (curl.match(/(-d|--data|--data-raw|--data-ascii|--data-binary)\s/)) {
+        method = 'POST';
+    }
+
+    // 2. Extract URL (handling various quote cases)
+    const urlMatch = curl.match(/['"](https?:\/\/[^'"]+)['"]/);
+    const url: string = urlMatch ? urlMatch[1] : '';
+
+    // 3. Extract headers (including -H and -b)
+    const headers: Record<string, string> = {};
+    // Process -H parameters
+    const headerRegex = /-H\s+['"]([^:]+):\s*([^'"]+)['"]/g;
+    let headerMatch: RegExpExecArray | null;
+    while ((headerMatch = headerRegex.exec(curl)) !== null) {
+        headers[headerMatch[1].trim()] = headerMatch[2].trim();
+    }
+    // Process -b (Cookie)
+    const cookieMatch = curl.match(/-b\s+['"]([^'"]+)['"]/);
+    if (cookieMatch) {
+        headers['Cookie'] = cookieMatch[1];
+    }
+
+    // 4. Smart parsing of request body data (handling various data formats)
+    let data: any = null;
+    let isJson: boolean = false;
+
+    // First check Content-Type
+    const contentType = headers['Content-Type'] || headers['content-type'];
+    isJson = contentType?.includes('application/json') ?? false;
+
+    // Try to extract data (supports multiple parameter formats)
+    const dataParamMatch = curl.match(/(-d|--data|--data-raw|--data-ascii|--data-binary)(?:\s+|=)(['"])(.*?)(?<!\\)\2/s);
+    if (dataParamMatch) {
+        const rawData = dataParamMatch[3];
+
+        // If it's JSON Content-Type or data looks like JSON
+        if (isJson || (rawData.startsWith('{') && rawData.endsWith('}')) ||
+            (rawData.startsWith('[') && rawData.endsWith(']'))) {
+            try {
+                data = JSON.parse(rawData);
+                isJson = true;
+                // Ensure correct Content-Type
+                headers['Content-Type'] = 'application/json';
+            } catch (e) {
+                data = rawData;
+                isJson = false;
+            }
+        } else {
+            data = rawData;
+        }
+    }
+    // 5. Build Python code
+    let code: string = 'import requests\n\n';
+    code += `url = '${url}'\n`;
+
+    if (Object.keys(headers).length > 0) {
+        code += `headers = ${JSON.stringify(headers, null, 4)}\n`;
+    }
+
+    if (data !== null) {
+        if (isJson) {
+            code += `json_data = ${JSON.stringify(data, null, 4)}\n`;
+        } else {
+            // Handle special characters in strings
+            const escapedData = data.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            code += `data = '${escapedData}'\n`;
+        }
+    }
+
+    code += `\nresponse = requests.${method.toLowerCase()}(\n    url,\n`;
+
+    if (Object.keys(headers).length > 0) {
+        code += '    headers=headers,\n';
+    }
+
+    if (data !== null) {
+        if (isJson) {
+            code += '    json=json_data,\n';
+        } else {
+            code += '    data=data,\n';
+        }
+    }
+
+    // Handle --insecure (skip SSL verification)
+    if (curl.includes('--insecure') || curl.includes('-k')) {
+        code += '    verify=False,\n';
+    }
+
+    // Remove trailing comma and newline
+    code = code.replace(/,\n$/, '\n');
+    code += ')\n\n';
+
+    code += 'print(response.status_code)\n';
+    code += 'print(response.text)\n';
+
+    return code;
+}
+
+
 // 获取indexDB数据
-const dbVersion = ref(2);
-const dbName = ref('SpiderCrawlData');
-const tab = ref('NetWork');
-const spiderTab = ref('Header');
+const dbVersion = ref(2)
+const dbName = ref('SpiderCrawlData')
+const tab = ref('NetWork')
+const spiderTab = ref('Header')
 const requestObject = ref({
   header: {},
   payload: {},
   response: {
     content: {
-      mimeType: ""
+      mimeType: '',
     },
-    text: ""
+    text: '',
   },
   cookie: {
     response: {},
-    request: {}
+    request: {},
   },
-});
+})
 const headerIcon = ref({
-  "general": true,
-  "request": true,
-  "response": true,
-  "payload": true,
-  "reqPayload": true,
-  "cookie": true,
-  "reqCookie": true,
-});
-const pdfPreviewUrl = ref('');
-const curlPyString = ref('');
-const curlString = ref('');
-const pdfData = ref('');
-const htmlStr = ref('');
+  'general': true,
+  'request': true,
+  'response': true,
+  'payload': true,
+  'reqPayload': true,
+  'cookie': true,
+  'reqCookie': true,
+})
+const pdfPreviewUrl = ref('')
+const curlPyString = ref('')
+const curlString = ref('')
+const pdfData = ref('')
+const htmlStr = ref('')
 const textLabel = ref(
-    {
-      a: `请输入字符串...`
-    }
-);
-const ToolBoxTab = ref('ToolBoxFormat');
-const FormatValue = ref('Cookie');
-const FormatInput = ref('');
-const FormatOutput = ref('');
+  {
+    a: `请输入字符串...`,
+  },
+)
+const ToolBoxTab = ref('ToolBoxFormat')
+const FormatValue = ref('Cookie')
+const FormatInput = ref('')
+const FormatOutput = ref('')
 const spiderCheckbox = ref({
-  all: {value: true, label: "all"},
-  xhr: {value: false, label: "xhr"},
-  doc: {value: false, label: "doc"},
-  css: {value: false, label: "css"},
-  js: {value: false, label: "Js"},
-  img: {value: false, label: "Img"},
-  media: {value: false, label: "Media"},
-  manifest: {value: false, label: "Manifest"},
-  ws: {value: false, label: "WS"},
-  wasm: {value: false, label: "Wasm"},
-  other: {value: false, label: "Other"},
-});
-const search = ref('');
-const db = ref(null);
-const drawer = ref(true);
-const rail = ref(true);
-const spiderDialog = ref(false);
+  all: { value: true, label: 'all' },
+  xhr: { value: false, label: 'xhr' },
+  doc: { value: false, label: 'doc' },
+  css: { value: false, label: 'css' },
+  js: { value: false, label: 'Js' },
+  img: { value: false, label: 'Img' },
+  media: { value: false, label: 'Media' },
+  manifest: { value: false, label: 'Manifest' },
+  ws: { value: false, label: 'WS' },
+  wasm: { value: false, label: 'Wasm' },
+  other: { value: false, label: 'Other' },
+})
+const search = ref('')
+const db = ref(null)
+const drawer = ref(true)
+const rail = ref(true)
+const spiderDialog = ref(false)
 const NetWorkSelectValue = ref([
-  "Xhr",
-  "Doc",
-  "Css",
-  "Js",
-  "Img",
-  "Media",
-  "Manifest",
-  "WS",
-  "Wasm",
-  "Other",
-]);
+  'Xhr',
+  'Doc',
+  'Css',
+  'Js',
+  'Img',
+  'Media',
+  'Manifest',
+  'WS',
+  'Wasm',
+  'Other',
+])
 const NetWorkSelect = ref([
-  "Xhr",
-  "Doc",
-  "Css",
-  "Js",
-  "Img",
-  "Media",
-  "Manifest",
-  "WS",
-  "Wasm",
-  "Other",
-]);
+  'Xhr',
+  'Doc',
+  'Css',
+  'Js',
+  'Img',
+  'Media',
+  'Manifest',
+  'WS',
+  'Wasm',
+  'Other',
+])
 const headers = ([
   // 定义你想要展示的列头
-  {title: 'start', key: 'start', fixed: true},
-  {title: 'code', value: 'code'},
-  {title: 'method', value: 'method'},
-  {title: 'url', value: 'url', maxWidth: 600,},
-  {title: 'time', value: 'time'},
-  {title: 'size', value: 'Size'},
-  {title: 'type', value: 'type'},
-  {title: 'version', value: 'version'},
+  { title: 'start', key: 'start', fixed: true },
+  { title: 'code', value: 'code' },
+  { title: 'method', value: 'method' },
+  { title: 'url', value: 'url', maxWidth: 600 },
+  { title: 'time', value: 'time' },
+  { title: 'size', value: 'Size' },
+  { title: 'type', value: 'type' },
+  { title: 'version', value: 'version' },
 ])
 const checkBoxDict = {
   xhr: ['fetch', 'xhr'],
@@ -230,67 +423,66 @@ const checkBoxList = ref([])
 const selected = ref([])
 const typeList = ref([])
 const openDB = async () => {
-  checkBoxList.value = [];
-  const request = indexedDB.open(dbName.value, dbVersion.value);
+  checkBoxList.value = []
+  const request = indexedDB.open(dbName.value, dbVersion.value)
 
   request.onupgradeneeded = (event: any) => {
-    const db = event.target.result;
-    if (!db.objectStoreNames.contains("myDataStore")) {
-      db.createObjectStore("myDataStore", {
-        keyPath: "id",
+    const db = event.target.result
+    if (!db.objectStoreNames.contains('myDataStore')) {
+      db.createObjectStore('myDataStore', {
+        keyPath: 'id',
         autoIncrement: true,
-      });
+      })
     }
-  };
+  }
 
   request.onsuccess = (event: any) => {
-    const db = event.target.result;
-    const transaction = db.transaction("myDataStore", "readwrite");
-    const store = transaction.objectStore("myDataStore");
-    var cursorRequest = null;
+    const db = event.target.result
+    const transaction = db.transaction('myDataStore', 'readwrite')
+    const store = transaction.objectStore('myDataStore')
+    var cursorRequest = null
     if (1) {
-      cursorRequest = store.openCursor();
+      cursorRequest = store.openCursor()
     } else {
-      cursorRequest = store.openCursor(null, "prev");
+      cursorRequest = store.openCursor(null, 'prev')
     }
-    cursorRequest.onsuccess = function (event: any) {
-      const cursor = event.target.result;
+    cursorRequest.onsuccess = function(event: any) {
+      const cursor = event.target.result
       if (cursor) {
         // 只处理新数据
         if (!lastProcessedIds.value.has(cursor.value.id)) {
-          executeData(cursor);
-          lastProcessedIds.value.add(cursor.value.id);
+          executeData(cursor)
+          lastProcessedIds.value.add(cursor.value.id)
         }
-        cursor.continue();
+        cursor.continue()
       } else {
-        console.log('数据加载完成');
       }
-    };
-    cursorRequest.onerror = function (event: any) {
-      console.error("读取数据时发生错误:", event.target.errorCode);
-    };
-  };
+    }
+    cursorRequest.onerror = function(event: any) {
+      console.error('读取数据时发生错误:', event.target.errorCode)
+    }
+  }
 
   request.onerror = (event: any) => {
-    console.error('Error opening database:', event.target.error);
-  };
-};
+    console.error('Error opening database:', event.target.error)
+  }
+}
 const executeData = (cursor: any) => {
-  let dataItem = {};
+  let dataItem = {}
   const valueStr = JSON.stringify(cursor.value)
-  const id = cursor.value.id;
-  const content = cursor.value.content;
-  const url = cursor.value.request.url;
-  const datetime = get_time(cursor.value.timestamp);
-  const timsMS = parseInt(cursor.value.time);
-  const resourceType = cursor.value._resourceType;
-  const httpVersion = cursor.value.request.httpVersion;
-  const status = cursor.value.response.status;
-  const method = cursor.value.request.method;
-  const bodySize = cursor.value.response.content.size;
-  var bodydata = "";
+  const id = cursor.value.id
+  const content = cursor.value.content
+  const url = cursor.value.request.url
+  const datetime = get_time(cursor.value.timestamp)
+  const timsMS = parseInt(cursor.value.time)
+  const resourceType = cursor.value._resourceType
+  const httpVersion = cursor.value.request.httpVersion
+  const status = cursor.value.response.status
+  const method = cursor.value.request.method
+  const bodySize = cursor.value.response.content.size
+  var bodydata = ''
   try {
-    bodydata = cursor.value.request.postData.text;
+    bodydata = cursor.value.request.postData.text
   } catch {
   }
   dataItem = {
@@ -315,198 +507,168 @@ const executeData = (cursor: any) => {
   if (spiderCheckboxAll) {
     if (searchString) {
       if (valueStr.includes(searchString)) {
-        NetWorkData.value.push(dataItem);
+        NetWorkData.value.push(dataItem)
       }
     } else {
-      NetWorkData.value.push(dataItem);
+      NetWorkData.value.push(dataItem)
     }
   } else {
-    console.log(resourceType, checkBoxList.value)
     if (checkBoxList.value.includes(resourceType)) {
       if (searchString) {
         if (valueStr.includes(searchString)) {
-          NetWorkData.value.push(dataItem);
+          NetWorkData.value.push(dataItem)
         }
       } else {
-        NetWorkData.value.push(dataItem);
+        NetWorkData.value.push(dataItem)
       }
     }
   }
-};
+}
 
 const del_one_data = async (pid: any) => {
-  const request = indexedDB.open(dbName.value, dbVersion.value);
-  request.onupgradeneeded = function (event) {
-    const db = event.target.result;
-    if (!db.objectStoreNames.contains("myDataStore")) {
-      db.createObjectStore("myDataStore", {
-        keyPath: "id",
+  const request = indexedDB.open(dbName.value, dbVersion.value)
+  request.onupgradeneeded = function(event) {
+    const db = event.target.result
+    if (!db.objectStoreNames.contains('myDataStore')) {
+      db.createObjectStore('myDataStore', {
+        keyPath: 'id',
         autoIncrement: true,
-      });
+      })
     }
-  };
-  request.onsuccess = function (event) {
-    const db = event.target.result;
-    const transaction = db.transaction("myDataStore", "readwrite");
-    const store = transaction.objectStore("myDataStore");
-    const request = store.delete(Number(pid));
-    request.onsuccess = function (e) {
-      console.log('Item deleted successfully');
-    };
+  }
+  request.onsuccess = function(event) {
+    const db = event.target.result
+    const transaction = db.transaction('myDataStore', 'readwrite')
+    const store = transaction.objectStore('myDataStore')
+    const request = store.delete(Number(pid))
+    request.onsuccess = function(e) {
+    }
 
-    request.onerror = function (e) {
-      console.error('Delete error:', e);
-    };
-    transaction.oncomplete = function () {
+    request.onerror = function(e) {
+      console.error('Delete error:', e)
+    }
+    transaction.oncomplete = function() {
       // 可选：关闭数据库连接
-      db.close();
-    };
-    transaction.onerror = function (e) {
-      console.error('Transaction error:', e);
-    };
-  };
+      db.close()
+    }
+    transaction.onerror = function(e) {
+      console.error('Transaction error:', e)
+    }
+  }
 
-  request.onerror = function (event) {
-    console.error("打开IndexedDB时发生错误:", event.target.errorCode);
-  };
+  request.onerror = function(event) {
+    console.error('打开IndexedDB时发生错误:', event.target.errorCode)
+  }
 }
 
 const deleteData = async () => {
   if (selectedKeys.value.length > 0) {
     Object.values(selectedKeys.value).forEach(item => {
-      console.log(item)
       del_one_data(item)
-      NetWorkData.value = NetWorkData.value.filter(query => query.id !== item);
+      NetWorkData.value = NetWorkData.value.filter(query => query.id !== item)
     })
+    selectedKeys.value = []
   }
-};
+}
 const getCrawlStatus = async () => {
   chrome.storage.sync.get(['spiderSwitch'], (result) => {
-    spiderSwitch.value = result.spiderSwitch;
+    spiderSwitch.value = result.spiderSwitch
   })
 
-};
+}
 
 const base64ToBlob = (base64: any, type: any) => {
   try {
-    var binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
+    var binaryString = window.atob(base64)
+    const len = binaryString.length
+    const bytes = new Uint8Array(len)
 
     for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+      bytes[i] = binaryString.charCodeAt(i)
     }
 
-    return new Blob([bytes], {type});
+    return new Blob([bytes], { type })
   } catch {
-    return stringToBlob(base64, type);
+    return stringToBlob(base64, type)
   }
 }
 const stringToBlob = (str: any, type: any) => {
-  const blob = new Blob([str], {type});
-  return blob;
+  const blob = new Blob([str], { type })
+  return blob
 }
 const pdfPreview = () => {
-  console.log(pdfData)
   try {
-    var blob = base64ToBlob(pdfData.value, "application/pdf");
-    var url = URL.createObjectURL(blob);
+    var blob = base64ToBlob(pdfData.value, 'application/pdf')
+    var url = URL.createObjectURL(blob)
   } catch (e) {
-    url = "";
+    url = ''
   }
   pdfPreviewUrl.value = url
 }
-const dbInterval = ref("");
 
 onMounted(() => {
-  getCrawlStatus();
-  openDB();
+  getCrawlStatus()
+  openDB()
   // dbInterval.value = setInterval(() => {
   //   openDB();
   // }, 5000);
-});
+})
 
 
 // Method
 const changeTabName = (e: any) => {
   tabName.value = e
-  console.log(tabName.value)
-}
-const handleCheckbox = () => {
-  all_flag = spiderCheckbox.value.all.value
-  other_flag = false
-  console.log(spiderCheckbox.value)
-  Object.values(spiderCheckbox.value).forEach(item => {
-        checkBoxValue = item.value
-        label = item.label
-        console.log(item)
-        if (label !== "all") {
-          if (checkBoxValue) {
-            other_flag = true
-          }
-        }
-      }
-  )
-  if (other_flag) {
-    spiderCheckbox.value.all.value = false
-  } else {
-    spiderCheckbox.value.all.value = true
-  }
-}
-const changeTab = (e) => {
-  tab.value = e;
 }
 const dbFindById = (idToSearch, callback) => {
-  const request = indexedDB.open(dbName.value, dbVersion.value);
+  const request = indexedDB.open(dbName.value, dbVersion.value)
 
-  request.onupgradeneeded = function (event) {
-    const db = event.target.result;
+  request.onupgradeneeded = function(event) {
+    const db = event.target.result
 
     // 检查对象存储是否存在，如果不存在则创建它
-    if (!db.objectStoreNames.contains("myDataStore")) {
-      db.createObjectStore("myDataStore", {
-        keyPath: "id",
+    if (!db.objectStoreNames.contains('myDataStore')) {
+      db.createObjectStore('myDataStore', {
+        keyPath: 'id',
         autoIncrement: true,
-      });
+      })
     }
-  };
+  }
 
-  request.onsuccess = function (event) {
-    const db = event.target.result;
+  request.onsuccess = function(event) {
+    const db = event.target.result
     // 执行查询操作
-    const transaction = db.transaction("myDataStore", "readonly");
-    const objectStore = transaction.objectStore("myDataStore");
+    const transaction = db.transaction('myDataStore', 'readonly')
+    const objectStore = transaction.objectStore('myDataStore')
 
     // 创建一个请求来获取指定id的数据
-    const getRequest = objectStore.get(idToSearch);
+    const getRequest = objectStore.get(idToSearch)
 
-    getRequest.onsuccess = function () {
+    getRequest.onsuccess = function() {
       if (getRequest.result) {
-        callback(getRequest.result);
+        callback(getRequest.result)
       } else {
-        console.log("No data found with id: ", idToSearch);
-        callback(null);
+        callback(null)
       }
-    };
+    }
 
-    getRequest.onerror = function (event) {
+    getRequest.onerror = function(event) {
       console.error(
-          "Error occurred while retrieving data: ",
-          event.target.errorCode
-      );
-    };
-  };
+        'Error occurred while retrieving data: ',
+        event.target.errorCode,
+      )
+    }
+  }
 
-  request.onerror = function (event) {
-    console.error("Error opening database: ", event.target.errorCode);
-  };
+  request.onerror = function(event) {
+    console.error('Error opening database: ', event.target.errorCode)
+  }
 }
 const rowClicked = (data: any) => {
   // 这里的item是被点击的行的数据
   dbFindById(data.id, DataPackage)
 }
 const DataPackage = (e: any) => {
-  let postData;
+  let postData
   const general = {
     URL: e.request.url,
     Method: e.request.method,
@@ -523,9 +685,9 @@ const DataPackage = (e: any) => {
     response: ResponseHeader,
   }
   try {
-    postData = e.request.postData;
+    postData = e.request.postData
   } catch {
-    postData = null;
+    postData = null
   }
   const payload = {
     query: queryString,
@@ -533,11 +695,11 @@ const DataPackage = (e: any) => {
   }
   const response = {
     content: content,
-    text: e.content
+    text: e.content,
   }
   const cookie = {
     request: e.request.cookies,
-    response: e.response.cookies
+    response: e.response.cookies,
   }
   requestObject.value = {
     header: header,
@@ -546,334 +708,315 @@ const DataPackage = (e: any) => {
     cookie: cookie,
     request: e.request,
   }
-  console.log(requestObject.value)
   visible.value = true
 }
-const UpdateInFormat = (e:any) => {
-  const selectetype = FormatValue.value;
-  const formattedValue = {};
+const UpdateInFormat = (e: any) => {
+  const selectetype = FormatValue.value
+  const formattedValue = {}
   if (e) {
-    if (selectetype === "Cookie") {
+    if (selectetype === 'Cookie') {
       try {
         try {
-          const cookieArray = JSON.parse(e);
+          const cookieArray = JSON.parse(e)
           if (Array.isArray(cookieArray)) {
             cookieArray.forEach((cookie) => {
-              formattedValue[cookie.name] = cookie.value;
-            });
-            FormatOutput.value = formattedValue;
+              formattedValue[cookie.name] = cookie.value
+            })
+            FormatOutput.value = formattedValue
           } else {
-            FormatOutput.value = "格式错误"
+            FormatOutput.value = '格式错误'
           }
         } catch (error) {
-          FormatInput.value.split(";").forEach((item) => {
-            const [key, value] = item.trim().split("=");
-            formattedValue[key] = value;
-          });
-          FormatOutput.value = formattedValue;
+          FormatInput.value.split(';').forEach((item) => {
+            const [key, value] = item.trim().split('=')
+            formattedValue[key] = value
+          })
+          FormatOutput.value = formattedValue
         }
       } catch (error) {
-        console.error("无法解析输入的 JSON 字符串", error);
-        FormatOutput.value = "格式错误"
+        console.error('无法解析输入的 JSON 字符串', error)
+        FormatOutput.value = '格式错误'
       }
     }
-    if (selectetype === "Header") {
+    if (selectetype === 'Header') {
       const inputdata = e
-          .replaceAll(":\n", ":")
-          .replaceAll("：\n", ":");
-      console.log(inputdata);
-      inputdata.split("\n").forEach((item) => {
-        const [key, value] = item.replace(":", "&&&").split("&&&");
+        .replaceAll(':\n', ':')
+        .replaceAll('：\n', ':')
+      inputdata.split('\n').forEach((item) => {
+        const [key, value] = item.replace(':', '&&&').split('&&&')
         formattedValue[key] = value
-      });
-      FormatOutput.value = formattedValue;
+      })
+      FormatOutput.value = formattedValue
     }
-    if (selectetype === "JSon") {
+    if (selectetype === 'JSon') {
       try {
-        const inputdata = JSON.parse(e);
-        FormatOutput.value = inputdata;
+        const inputdata = JSON.parse(e)
+        FormatOutput.value = inputdata
       } catch (e) {
-        console.log(e);
-        FormatOutput.value = "";
+        FormatOutput.value = ''
       }
     }
   } else {
-    FormatOutput.value = "";
+    FormatOutput.value = ''
   }
-  FormatOutput.value = JSON.stringify(FormatOutput.value, null, 2);
-  console.log('FormatOutput', e, FormatOutput.value)
+  FormatOutput.value = JSON.stringify(FormatOutput.value, null, 2)
 
-};
+}
 const UpselectFormat = () => {
-  const e =  FormatInput.value
-  console.log('input', e, FormatInput.value)
-  const selectetype = FormatValue.value;
-  const formattedValue = {};
+  const e = FormatInput.value
+  const selectetype = FormatValue.value
+  const formattedValue = {}
   if (e) {
-    if (selectetype === "Cookie") {
+    if (selectetype === 'Cookie') {
       try {
         try {
-          const cookieArray = JSON.parse(e);
+          const cookieArray = JSON.parse(e)
           if (Array.isArray(cookieArray)) {
             cookieArray.forEach((cookie) => {
-              formattedValue[cookie.name] = cookie.value;
-            });
-            FormatOutput.value = formattedValue;
+              formattedValue[cookie.name] = cookie.value
+            })
+            FormatOutput.value = formattedValue
           } else {
-            FormatOutput.value = "格式错误"
+            FormatOutput.value = '格式错误'
           }
         } catch (error) {
-          FormatInput.value.split(";").forEach((item) => {
-            const [key, value] = item.trim().split("=");
-            formattedValue[key] = value;
-          });
-          FormatOutput.value = formattedValue;
+          FormatInput.value.split(';').forEach((item) => {
+            const [key, value] = item.trim().split('=')
+            formattedValue[key] = value
+          })
+          FormatOutput.value = formattedValue
         }
       } catch (error) {
-        console.error("无法解析输入的 JSON 字符串", error);
-        FormatOutput.value = "格式错误"
+        console.error('无法解析输入的 JSON 字符串', error)
+        FormatOutput.value = '格式错误'
       }
     }
-    if (selectetype === "Header") {
+    if (selectetype === 'Header') {
       const inputdata = e
-          .replaceAll(":\n", ":")
-          .replaceAll("：\n", ":");
-      console.log(inputdata);
-      inputdata.split("\n").forEach((item) => {
-        const [key, value] = item.replace(":", "&&&").split("&&&");
+        .replaceAll(':\n', ':')
+        .replaceAll('：\n', ':')
+      inputdata.split('\n').forEach((item) => {
+        const [key, value] = item.replace(':', '&&&').split('&&&')
         formattedValue[key] = value
-      });
-      FormatOutput.value = formattedValue;
+      })
+      FormatOutput.value = formattedValue
     }
-    if (selectetype === "JSon") {
+    if (selectetype === 'JSon') {
       try {
-        const inputdata = JSON.parse(e);
-        FormatOutput.value = inputdata;
+        const inputdata = JSON.parse(e)
+        FormatOutput.value = inputdata
       } catch (e) {
-        console.log(e);
-        FormatOutput.value = "";
+        FormatOutput.value = ''
       }
     }
   } else {
-    FormatOutput.value = "";
+    FormatOutput.value = ''
   }
-  FormatOutput.value = JSON.stringify(FormatOutput.value, null, 2);
-  console.log('FormatOutput', e, FormatOutput.value)
+  FormatOutput.value = JSON.stringify(FormatOutput.value, null, 2)
+}
 
-};
+const copyApi = (value: any) => {
+  const fakeTextArea = document.createElement('textarea')
+  fakeTextArea.value = JSON.stringify(value)
+  document.body.appendChild(fakeTextArea)
+  fakeTextArea.select()
+  document.execCommand('copy')
+  document.body.removeChild(fakeTextArea)
+  Message.success('已复制到剪贴板')
+}
 const copyToClipboard = () => {
-  const fakeTextArea = document.createElement("textarea");
-  fakeTextArea.value = FormatOutput.value;
+  const fakeTextArea = document.createElement('textarea')
+  fakeTextArea.value = FormatOutput.value
   const cookieString = Object.entries(FormatOutput.value)
-      .map(([key, value]) => `${key}=${value}`)
-      .join("; ");
-  document.body.appendChild(fakeTextArea);
-  fakeTextArea.select();
-  document.execCommand("copy");
-  document.body.removeChild(fakeTextArea);
-  Message.success("已复制到剪贴板");
-};
+    .map(([key, value]) => `${key}=${value}`)
+    .join('; ')
+  document.body.appendChild(fakeTextArea)
+  fakeTextArea.select()
+  document.execCommand('copy')
+  document.body.removeChild(fakeTextArea)
+  Message.success('已复制到剪贴板')
+}
 const copyToCStr = () => {
-  const fakeTextArea = document.createElement("textarea");
+  const fakeTextArea = document.createElement('textarea')
   const cookieString = Object.entries(JSON.parse(FormatOutput.value))
-      .map(([key, value]) => `${key}=${value}`)
-      .join("; ");
-  fakeTextArea.value = cookieString;
-  document.body.appendChild(fakeTextArea);
-  fakeTextArea.select();
-  document.execCommand("copy");
-  document.body.removeChild(fakeTextArea);
-  Message.success("已复制到剪贴板");
-};
+    .map(([key, value]) => `${key}=${value}`)
+    .join('; ')
+  fakeTextArea.value = cookieString
+  document.body.appendChild(fakeTextArea)
+  fakeTextArea.select()
+  document.execCommand('copy')
+  document.body.removeChild(fakeTextArea)
+  Message.success('已复制到剪贴板')
+}
 const copyToCys = () => {
-  const fakeTextArea = document.createElement("textarea");
-  fakeTextArea.value = FormatOutput.value;
-  document.body.appendChild(fakeTextArea);
-  fakeTextArea.select();
-  document.execCommand("copy");
-  document.body.removeChild(fakeTextArea);
-  Message.success("已复制到剪贴板");
-};
+  const fakeTextArea = document.createElement('textarea')
+  fakeTextArea.value = FormatOutput.value
+  document.body.appendChild(fakeTextArea)
+  fakeTextArea.select()
+  document.execCommand('copy')
+  document.body.removeChild(fakeTextArea)
+  Message.success('已复制到剪贴板')
+}
 const handleCurl = () => {
   curlPyString.value = curlToPy(curlString.value)
-};
-const handleHeaderIcon = (e) => {
-  const status = headerIcon.value[e]
-  if (status) {
-    headerIcon.value[e] = false
-  } else {
-    headerIcon.value[e] = true
-  }
-};
+}
 const handleCurlStr = (e) => {
   const curlCommand = curlApi(e)
-  navigator.clipboard.writeText(curlCommand).then(function () {
+  navigator.clipboard.writeText(curlCommand).then(function() {
     Message.success('Curl复制成功')
-  }, function () {
+  }, function() {
     Message.error('Curl复制失败')
-  });
-};
+  })
+}
 const curlApi = (request) => {
-  const method = request.method;
-  const url = request.url;
-  const headers = request.headers;
-  var body = ""
+  const method = request.method
+  const url = request.url
+  const headers = request.headers
+  var body = ''
   try {
-    body = request.postData.text;
+    body = request.postData.text
   } catch {
   }
-  var curlCommand = `curl '${url}'`;
+  var curlCommand = `curl '${url}'`
 
   if (headers) {
     headers.forEach((value, key) => {
-      curlCommand += ` -H '${value.name.replace(/^:/, "")}: ${value.value}'`;
-    });
+      curlCommand += ` -H '${value.name.replace(/^:/, '')}: ${value.value}'`
+    })
   }
 
   if (body) {
-    curlCommand += ` --data-raw '${body}'`;
+    curlCommand += ` --data-raw '${body}'`
   }
   return curlCommand
 }
-const JSonFomat = (e) => {
-  try {
-    e = JSON.parse(e);
-  } catch {
-  }
-  return JSON.stringify(e, null, 2);
-};
 const resetDb = () => {
-  const deleteRequest = indexedDB.deleteDatabase(dbName.value);
+  const deleteRequest = indexedDB.deleteDatabase(dbName.value)
   deleteRequest.onsuccess = () => {
-    Message.info('重置成功');
-  };
+    Message.info('重置成功')
+  }
   deleteRequest.onerror = (event) => {
-    Message.error('重置失败', event);
-  };
+    Message.error('重置失败', event)
+  }
 }
 const get_time = (timestamp: any) => {
   // 假设我们有一个时间戳
-  timestamp = Number(timestamp);
+  timestamp = Number(timestamp)
   // 使用 toISOString 方法转换为 ISO 格式的字符串
-  var isoString = new Date(timestamp).toISOString();
+  var isoString = new Date(timestamp).toISOString()
 
   // 截取我们需要的部分，去掉 'Z' 表示的 UTC 时区
-  var formattedDate = isoString.slice(10, -5).replace(/T/, " ");
+  var formattedDate = isoString.slice(10, -5).replace(/T/, ' ')
 
   // 输出结果
-  return formattedDate;
-};
+  return formattedDate
+}
 const getColor = (t: any) => {
-  const code = t.code;
+  const code = t.code
   if (code >= 200 && code < 300) {
-    return 'green';
+    return 'green'
   } else if (code >= 300 && code < 400) {
-    return 'blue';
+    return 'blue'
   } else if (code >= 400 && code < 500) {
-    return 'orange';
+    return 'orange'
   } else if (code >= 500 && code < 600) {
-    return 'red';
+    return 'red'
   } else {
-    return 'gray';
+    return 'gray'
   }
-};
+}
 const formatTime = (item: any) => {
   const timeNow = item.time || 0
-  const timeString = timeNow > 1000 ? String((timeNow / 1000).toFixed(2)) + ' s' : String(timeNow) + ' ms';
-  return timeString;
-};
+  const timeString = timeNow > 1000 ? String((timeNow / 1000).toFixed(2)) + ' s' : String(timeNow) + ' ms'
+  return timeString
+}
 const formatSize = (size: any) => {
   if (size < 1024) {
-    return size + ' B';
+    return size + ' B'
   } else if (size < 1024 * 1024) {
-    return (size / 1024).toFixed(2) + ' KB';
+    return (size / 1024).toFixed(2) + ' KB'
   } else if (size < 1024 * 1024 * 1024) {
-    return (size / (1024 * 1024)).toFixed(2) + ' MB';
+    return (size / (1024 * 1024)).toFixed(2) + ' MB'
   } else {
-    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
   }
-};
+}
 const getIcon = (e: any) => {
   if (!e) {
     e = {}
   }
   e = e.type
-  const codeStr = String(e);
+  const codeStr = String(e)
   const IconDict = {
-    "document": "icon-documents",
-    "stylesheet": "icon-Stylesheet",
-    "image": "icon-image",
-    "font": "icon-font",
-    "script": "icon-script",
+    'document': 'icon-documents',
+    'stylesheet': 'icon-Stylesheet',
+    'image': 'icon-image',
+    'font': 'icon-font',
+    'script': 'icon-script',
   }
-  const Icon = IconDict[codeStr] || 'icon-weizhigeshi';
+  const Icon = IconDict[codeStr] || 'icon-weizhigeshi'
   return Icon
-};
+}
 const filteredData = computed(() => {
   if (!searchValue.value) return NetWorkData.value
   return NetWorkData.value.filter(item =>
-      JSON.stringify(item).includes(searchValue.value.trim())
+    JSON.stringify(item).includes(searchValue.value.trim()),
   )
 })
-const visible = ref(false);
+const visible = ref(false)
 
-const handleClick = () => {
-  visible.value = true;
-};
 const handleOk = () => {
-  visible.value = false;
-};
+  visible.value = false
+}
 const handleCancel = () => {
-  visible.value = false;
+  visible.value = false
 }
 // 数组中的字典聚合
 const aggregate = <T extends Record<PropertyKey, unknown>>(arr: T[]): T => {
-  const res = {} as T;
-  if (!arr) return res;
+  const res = {} as T
+  if (!arr) return res
   arr.forEach(item => {
-    const name = item.name;
-    const value = item.value;
-    res[name] = value;
+    const name = item.name
+    const value = item.value
+    res[name] = value
   })
-  return JSON.stringify(res);
-};
+  return JSON.stringify(res)
+}
 const try_parse = (e: any) => {
   try {
     e = JSON.parse(e)
   } catch (err) {
   }
-  console.log(e)
-  return e;
+  return e
 }
 </script>
 
 <template>
   <a-layout class="h-[100vh]">
     <a-layout-sider
-        theme="dark"
-        breakpoint="lg"
-        :width="220"
-        collapsible
-        :collapsed="collapsed"
-        @collapse="onCollapse"
+      theme="dark"
+      breakpoint="lg"
+      :width="220"
+      collapsible
+      :collapsed="collapsed"
+      @collapse="onCollapse"
     >
       <div class="items-center text-center text-white font-bold text-base p-3 flex gap-2">
-        <icon-font type="icon-wangluozhuabao" :size="20"/>
+        <icon-font type="icon-wangluozhuabao" :size="20" />
         <div v-if="!collapsed">
-          SpiderCrawlPlug
+          SpiderCrawlPlug3
         </div>
       </div>
       <a-menu
-          :defaultOpenKeys="['1']"
-          :defaultSelectedKeys="['1']"
-
+        :defaultOpenKeys="['1']"
+        :defaultSelectedKeys="['1']"
       >
         <a-menu-item key="1" @click="changeTabName('NetWork')">
-          <IconHome/>
+          <IconHome />
           抓包
         </a-menu-item>
         <a-menu-item key="2" @click="changeTabName('Tool')">
-          <IconCalendar/>
+          <IconCalendar />
           工具箱
         </a-menu-item>
       </a-menu>
@@ -885,22 +1028,22 @@ const try_parse = (e: any) => {
             <div class="text-md font-bold flex gap-2 items-center">
               监听
             </div>
-            <a-switch type="round" v-model:model-value="spiderSwitch" @click="setAll"/>
+            <a-switch type="round" v-model:model-value="spiderSwitch" @click="setAll" />
           </div>
           <div class="flex gap-3 items-center text-center ">
             <a-button type="primary" status="danger" @click="deleteData" v-if="selectedKeys.length>0">
               <template #icon>
-                <icon-delete/>
+                <icon-delete />
               </template>
               删除 {{ selectedKeys.length }} 个
             </a-button>
             <a-button type="primary" @click="openDB">
               <template #icon>
-                <icon-refresh/>
+                <icon-refresh />
               </template>
               刷新
             </a-button>
-            <a-input-search placeholder="输入搜索关键字" search-button v-model="searchValue"/>
+            <a-input-search placeholder="输入搜索关键字" search-button v-model="searchValue" />
           </div>
         </div>
       </a-layout-header>
@@ -909,10 +1052,11 @@ const try_parse = (e: any) => {
           <div v-if="tabName==='NetWork'">
             <a-table row-key="id" :columns="columns" :data="filteredData"
                      :row-selection="rowSelection" :pagination="false" :sticky-header="0.1"
+                     @row-contextmenu="handleRightClick"
                      v-model:selectedKeys="selectedKeys">
               <template #code="{ record,rowIndex }">
                 <div class="flex gap-1 items-center text-center font-bold text-md">
-                  <icon-font :type="getIcon(record)" :size="18"/>
+                  <icon-font :type="getIcon(record)" :size="18" />
                   <a-tag :color="getColor(record)"> {{ record.code }}
                   </a-tag>
                 </div>
@@ -967,6 +1111,40 @@ const try_parse = (e: any) => {
                 </a-tag>
               </template>
             </a-table>
+            <!-- 右键菜单 -->
+            <div v-if="contextMenu.visible"
+                 :style="{left: contextMenu.left + 'px', top: contextMenu.top + 'px'}"
+                 class="context-menu text-xs p-1 text-nowrap rounded-xl"
+                 :class="handleRowClass()"
+            >
+              <!-- 关闭按钮 -->
+              <div class="close-btn" @click.stop="closeContextMenu">
+                <img src="../assets/svg/MaterialSymbolsLightCancelPresentationOutline.svg" alt="Icon" width="25"
+                     height="25">
+              </div>
+
+              <div @click="handleMenuClick('curl')" class="hover:bg-blue-300 flex gap-3 items-center text-center">
+                <img src="../assets/svg/IconParkCurling.svg" alt="Icon" width="15" height="15">
+                复制 CURL
+              </div>
+              <div @click="handleMenuClick('request')" class="hover:bg-blue-300 flex gap-3 items-center text-center">
+                <img src="../assets/svg/MaterialSymbolsSendAndArchiveOutlineRounded.svg" alt="Icon" width="15"
+                     height="15">
+                复制 Request
+              </div>
+              <div @click="handleMenuClick('cookie')" class="hover:bg-blue-300 flex gap-3 items-center text-center">
+                <img src="../assets/svg/LineMdCookieCheck.svg" alt="Icon" width="15" height="15">
+                复制 Cookie
+              </div>
+              <div @click="handleMenuClick('header')" class="hover:bg-blue-300 flex gap-3 items-center text-center">
+                <img src="../assets/svg/JamHeader.svg" alt="Icon" width="15" height="15">
+                复制 Headers
+              </div>
+              <div @click="handleMenuClick('params')" class="hover:bg-blue-300 flex gap-3 items-center text-center">
+                <img src="../assets/svg/OuiTokenParameter.svg" alt="Icon" width="15" height="15">
+                复制 请求参数
+              </div>
+            </div>
           </div>
           <div v-else>
             <!-- 1. ToolBoxFormat -->
@@ -975,10 +1153,10 @@ const try_parse = (e: any) => {
                 <!-- 顶部工具栏 -->
                 <div class="flex justify-between">
                   <a-select
-                      :style="{width:'320px'}"
-                      v-model="FormatValue"
-                      placeholder="格式化类型"
-                      @change="UpselectFormat"
+                    :style="{width:'320px'}"
+                    v-model="FormatValue"
+                    placeholder="格式化类型"
+                    @change="UpselectFormat"
                   >
                     <a-option value="Cookie">Cookie</a-option>
                     <a-option value="Header">Header</a-option>
@@ -995,22 +1173,22 @@ const try_parse = (e: any) => {
                 <div class="mt-5 flex justify-between">
                   <div class="w-[48%]">
                     <a-textarea
-                        v-model:model-value="FormatInput"
-                        :placeholder="textLabel.a"
-                        :auto-size="{
+                      v-model:model-value="FormatInput"
+                      :placeholder="textLabel.a"
+                      :auto-size="{
                               minRows:23,
                               maxRows:23
                             }"
-                        allow-clear
-                        @input="UpdateInFormat"
+                      allow-clear
+                      @input="UpdateInFormat"
                     />
                   </div>
 
                   <div class="text-left ml-5 w-[48%]">
                     <JsonViewer
-                        :data="try_parse(FormatOutput)"
-                        :darkMode="true"
-                        class="break-all max-h-[688px] overflow-y-auto w-full">
+                      :data="try_parse(FormatOutput)"
+                      :darkMode="true"
+                      class="break-all max-h-[688px] overflow-y-auto w-full">
                     </JsonViewer>
                   </div>
                 </div>
@@ -1021,14 +1199,14 @@ const try_parse = (e: any) => {
                 <a-row justify="center">
                   <a-col :span="22">
                     <a-textarea
-                        v-model="pdfData"
-                        placeholder="请输入base64字符"
-                        :auto-size="{
+                      v-model="pdfData"
+                      placeholder="请输入base64字符"
+                      :auto-size="{
                               minRows:2,
                               maxRows:8
                             }"
-                        allow-clear
-                        @input="pdfPreview"
+                      allow-clear
+                      @input="pdfPreview"
                     />
                     <div class="flex text-center items-center justify-center p-3">
                       <a :href="pdfPreviewUrl" target="_blank">点击此处全屏查看</a>
@@ -1037,7 +1215,7 @@ const try_parse = (e: any) => {
                 </a-row>
 
                 <div
-                    style="
+                  style="
                   display: flex;
                   justify-content: center;
                   align-items: center;
@@ -1045,10 +1223,10 @@ const try_parse = (e: any) => {
                 "
                 >
                   <iframe
-                      :src="pdfPreviewUrl"
-                      width="90%"
-                      height="700vh"
-                      frameborder="0"
+                    :src="pdfPreviewUrl"
+                    width="90%"
+                    height="700vh"
+                    frameborder="0"
                   />
                 </div>
               </a-tab-pane>
@@ -1058,20 +1236,20 @@ const try_parse = (e: any) => {
                 <a-row justify="center">
                   <a-col :span="22">
                     <a-textarea
-                        v-model="htmlStr"
-                        placeholder="请输入Html字符"
-                        :auto-size="{
+                      v-model="htmlStr"
+                      placeholder="请输入Html字符"
+                      :auto-size="{
                               minRows:5,
                               maxRows:15
                             }"
-                        allow-clear
+                      allow-clear
                     />
                   </a-col>
                 </a-row>
 
                 <a-card
-                    class="max-h-[666px] overflow-y-auto m-5">
-                  <div style="width: 99%" v-html="htmlStr"/>
+                  class="max-h-[666px] overflow-y-auto m-5">
+                  <div style="width: 99%" v-html="htmlStr" />
                 </a-card>
               </a-tab-pane>
 
@@ -1080,16 +1258,16 @@ const try_parse = (e: any) => {
                 <a-row :style="{ height: 'calc(90vh - 5%)', paddingTop: '20px' }">
                   <a-col :span="12">
                     <a-textarea
-                        v-model="curlString"
-                        :placeholder="textLabel.a"
-                        :rows="23"
-                        allow-clear
-                        @input="handleCurl"
+                      v-model="curlString"
+                      :placeholder="textLabel.a"
+                      :rows="23"
+                      allow-clear
+                      @input="handleCurl"
                     />
                   </a-col>
 
                   <a-col :span="12" style="overflow-y: auto">
-                    <div class="output" v-html="curlPyString"/>
+                    <div class="output" v-html="curlPyString" />
                   </a-col>
                 </a-row>
               </a-tab-pane>
@@ -1106,7 +1284,7 @@ const try_parse = (e: any) => {
     <a-tabs style="height: auto; max-height: 88%; min-height: 333px">
       <a-tab-pane key="1">
         <template #title>
-          <icon-font type="icon-icon-qingqiutou"/>
+          <icon-font type="icon-icon-qingqiutou" />
           Header
         </template>
 
@@ -1151,31 +1329,31 @@ const try_parse = (e: any) => {
       </a-tab-pane>
       <a-tab-pane key="2">
         <template #title>
-          <icon-font type="icon-qingqiucanshu"/>
+          <icon-font type="icon-qingqiucanshu" />
           Payload
         </template>
         <div class="grid gap-5">
           <div v-if="JSON.stringify(requestObject.payload.query) != '[]'">
             <div class="text-md font-bold pb-1 ">URL参数</div>
             <JsonViewer
-                :data="try_parse(aggregate(requestObject.payload.query))"
-                :darkMode="true"
-                class="break-all max-h-[388px] overflow-y-auto"
+              :data="try_parse(aggregate(requestObject.payload.query))"
+              :darkMode="true"
+              class="break-all max-h-[388px] overflow-y-auto"
             />
           </div>
           <div v-if="requestObject.payload.postData">
             <div class="text-md font-bold text-blue-600 pb-1">请求参数</div>
             <JsonViewer
-                :data="try_parse(requestObject.payload.postData.text)"
-                :darkMode="true"
-                class="break-all max-h-[388px] overflow-y-auto">
+              :data="try_parse(requestObject.payload.postData.text)"
+              :darkMode="true"
+              class="break-all max-h-[388px] overflow-y-auto">
             </JsonViewer>
           </div>
         </div>
       </a-tab-pane>
       <a-tab-pane key="3">
         <template #title>
-          <icon-font type="icon-yulan"/>
+          <icon-font type="icon-yulan" />
           Preview
         </template>
         <div>
@@ -1183,9 +1361,9 @@ const try_parse = (e: any) => {
             <div class="p-3"
                  v-if="requestObject.response.content.mimeType.includes('application/json')">
               <JsonViewer
-                  :data="try_parse(requestObject.response.text)"
-                  :darkMode="true"
-                  class="break-all max-h-[688px] overflow-y-auto">
+                :data="try_parse(requestObject.response.text)"
+                :darkMode="true"
+                class="break-all max-h-[688px] overflow-y-auto">
               </JsonViewer>
             </div>
             <div v-else v-html="requestObject.response.text" class="max-h-[666px] overflow-y-auto break-all"></div>
@@ -1202,7 +1380,7 @@ const try_parse = (e: any) => {
       </a-tab-pane>
       <a-tab-pane key="4">
         <template #title>
-          <icon-font type="icon-xiangying"/>
+          <icon-font type="icon-xiangying" />
           Response
         </template>
         <div class="max-h-[666px] overflow-y-auto break-all p-3">
@@ -1211,7 +1389,7 @@ const try_parse = (e: any) => {
       </a-tab-pane>
       <a-tab-pane key="5">
         <template #title>
-          <icon-font type="icon--cookie"/>
+          <icon-font type="icon--cookie" />
           cookie
         </template>
         <div class="grid gap-3">
@@ -1219,17 +1397,17 @@ const try_parse = (e: any) => {
                class="">
             <div class="text-md font-bold pb-1 ">请求Cookie</div>
             <JsonViewer
-                :data="try_parse(aggregate(requestObject.cookie.request))"
-                :darkMode="true"
-                class="break-all max-h-[388px] overflow-y-auto"
+              :data="try_parse(aggregate(requestObject.cookie.request))"
+              :darkMode="true"
+              class="break-all max-h-[388px] overflow-y-auto"
             />
           </div>
           <div v-if="requestObject.cookie.response.length > 0">
             <div class="text-md font-bold pb-1 text-yellow-600">响应Cookie</div>
             <JsonViewer
-                :data="try_parse(aggregate(requestObject.cookie.response))"
-                :darkMode="true"
-                class="break-all max-h-[388px] overflow-y-auto"
+              :data="try_parse(aggregate(requestObject.cookie.response))"
+              :darkMode="true"
+              class="break-all max-h-[388px] overflow-y-auto"
             />
           </div>
         </div>
@@ -1242,4 +1420,34 @@ const try_parse = (e: any) => {
 @import "tailwindcss";
 
 @plugin "daisyui";
+
+
+.context-menu {
+  position: fixed;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  max-height: 80vh; /* 限制最大高度 */
+  overflow-y: auto; /* 添加滚动条以防内容过多 */
+}
+
+.context-menu div {
+  padding: 8px 15px;
+  cursor: pointer;
+}
+
+/* 关闭按钮样式 */
+.close-btn {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  color: #999;
+}
+
 </style>

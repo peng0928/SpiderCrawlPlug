@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { crx } from '@crxjs/vite-plugin'
-import tailwindcss from "@tailwindcss/vite";
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import manifest from './src/manifest'
 
@@ -12,14 +12,14 @@ export default defineConfig(({ mode }) => {
     build: {
       cssCodeSplit: true,
       emptyOutDir: true,
-      outDir: 'build',
+      outDir: 'SpiderCrawlPlug3',
       rollupOptions: {
         output: {
           chunkFileNames: 'assets/chunk-[hash].js',
         },
       },
     },
-    plugins: [crx({ manifest }), tailwindcss(), vue(), ],
+    plugins: [crx({ manifest }), tailwindcss(), vue()],
     legacy: {
       skipWebSocketTokenCheck: true,
     },
