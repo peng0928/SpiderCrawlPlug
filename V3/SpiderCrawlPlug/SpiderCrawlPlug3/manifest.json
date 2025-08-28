@@ -1,0 +1,83 @@
+{
+  "name": "SpiderCrawlPlug",
+  "description": "",
+  "version": "3.0.0",
+  "manifest_version": 3,
+  "icons": {
+    "16": "img/icon.png",
+    "32": "img/icon.png",
+    "48": "img/icon.png",
+    "128": "img/icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "img/icon.png"
+  },
+  "options_page": "options.html",
+  "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "assets/chunk-CBBoONN6.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
+        "assets/chunk-BMl9U9UD.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": [],
+      "resources": [
+        "img/logo-16.png",
+        "img/logo-32.png",
+        "img/logo-48.png",
+        "img/logo-128.png"
+      ],
+      "use_dynamic_url": false
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "resources": [
+        "src/contentScript/inject.ts",
+        "src/contentScript/inject2.ts",
+        "assets/chunk-CBBoONN6.js",
+        "assets/chunk-BMl9U9UD.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ],
+  "permissions": [
+    "sidePanel",
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "notifications",
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "http://*/*",
+    "https://*/*",
+    "debugger"
+  ],
+  "chrome_url_overrides": {}
+}

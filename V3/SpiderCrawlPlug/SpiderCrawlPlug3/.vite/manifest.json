@@ -1,0 +1,94 @@
+{
+  "../../../../../../../@crx/manifest": {
+    "file": "assets/chunk-CfbyVU4M.js",
+    "name": "crx-manifest.js",
+    "src": "../../../../../../../@crx/manifest",
+    "isEntry": true
+  },
+  "_arco-Cd8VwTzD.css": {
+    "file": "assets/arco-Cd8VwTzD.css",
+    "src": "_arco-Cd8VwTzD.css"
+  },
+  "_chunk-BZa7IkcD.js": {
+    "file": "assets/chunk-BZa7IkcD.js",
+    "name": "runtime-dom.esm-bundler"
+  },
+  "_chunk-DBzfZ1E2.js": {
+    "file": "assets/chunk-DBzfZ1E2.js",
+    "name": "arco",
+    "imports": [
+      "_chunk-BZa7IkcD.js"
+    ],
+    "css": [
+      "assets/arco-Cd8VwTzD.css"
+    ]
+  },
+  "devtools.html": {
+    "file": "assets/chunk-eeDBBfVL.js",
+    "name": "devtools.html",
+    "src": "devtools.html",
+    "isEntry": true,
+    "imports": [
+      "_chunk-BZa7IkcD.js"
+    ],
+    "css": [
+      "assets/devtools-COuHe_Dt.css"
+    ]
+  },
+  "options.html": {
+    "file": "assets/chunk-CZuf5xEN.js",
+    "name": "options.html",
+    "src": "options.html",
+    "isEntry": true,
+    "imports": [
+      "_chunk-BZa7IkcD.js",
+      "_chunk-DBzfZ1E2.js"
+    ],
+    "css": [
+      "assets/options-CBmr1NQp.css"
+    ]
+  },
+  "popup.html": {
+    "file": "assets/chunk-DmC-OrBJ.js",
+    "name": "popup.html",
+    "src": "popup.html",
+    "isEntry": true,
+    "imports": [
+      "_chunk-BZa7IkcD.js",
+      "_chunk-DBzfZ1E2.js"
+    ],
+    "css": [
+      "assets/popup-BlpGO4Jb.css"
+    ]
+  },
+  "sidepanel.html": {
+    "file": "assets/chunk-B2H3tBtL.js",
+    "name": "sidepanel.html",
+    "src": "sidepanel.html",
+    "isEntry": true,
+    "imports": [
+      "_chunk-BZa7IkcD.js"
+    ],
+    "css": [
+      "assets/devtools-COuHe_Dt.css"
+    ]
+  },
+  "src/background/index.ts": {
+    "file": "assets/chunk-wWZc9sk6.js",
+    "name": "index.ts",
+    "src": "src/background/index.ts",
+    "isEntry": true
+  },
+  "src/contentScript/index.ts": {
+    "file": "assets/chunk-CBBoONN6.js",
+    "name": "index.ts",
+    "src": "src/contentScript/index.ts",
+    "isEntry": true
+  },
+  "src/contentScript/index2.ts": {
+    "file": "assets/chunk-BMl9U9UD.js",
+    "name": "index2.ts",
+    "src": "src/contentScript/index2.ts",
+    "isEntry": true
+  }
+}
