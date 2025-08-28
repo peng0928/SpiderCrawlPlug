@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6438ebd7-a599-4ba1-840c-474558348dfe" name="更改" comment="">
+    <list default="true" id="6438ebd7-a599-4ba1-840c-474558348dfe" name="更改" comment="refactor: 统一扩展图标&#10;&#10;- 将所有扩展图标替换为同一文件 'img/icon.png'- 更新 action 默认图标为 'img/icon.png'&#10;- 删除了无关的文件引用和更改记录">
+      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/public/img/icon.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/manifest.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/manifest.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,12 +90,25 @@
       <option name="presentableId" value="Default" />
       <updated>1756185098639</updated>
       <workItem from="1756185099692" duration="21495000" />
-      <workItem from="1756261199970" duration="24499000" />
+      <workItem from="1756261199970" duration="25018000" />
     </task>
+    <task id="LOCAL-00001" summary="refactor: 统一扩展图标&#10;&#10;- 将所有扩展图标替换为同一文件 'img/icon.png'- 更新 action 默认图标为 'img/icon.png'&#10;- 删除了无关的文件引用和更改记录">
+      <option name="closed" value="true" />
+      <created>1756344337539</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1756344337539</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="refactor: 统一扩展图标&#10;&#10;- 将所有扩展图标替换为同一文件 'img/icon.png'- 更新 action 默认图标为 'img/icon.png'&#10;- 删除了无关的文件引用和更改记录" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor: 统一扩展图标&#10;&#10;- 将所有扩展图标替换为同一文件 'img/icon.png'- 更新 action 默认图标为 'img/icon.png'&#10;- 删除了无关的文件引用和更改记录" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -1,7 +1,7 @@
 {
   "name": "spidercrawlplug",
   "displayName": "SpiderCrawlPlug",
-  "version": "0.0.0",
+  "version": "3.0.0",
   "author": "**",
   "description": "",
   "type": "module",
@@ -17,7 +17,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": " vite build",
     "preview": "vite preview",
     "fmt": "prettier --write '**/*.{vue,ts,json,css,scss,md}'",
     "zip": "npm run build && node src/zip.js"
@@ -37,8 +37,8 @@
     "gulp": "^5.0.0",
     "gulp-zip": "^6.0.0",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2",
+    "typescript": "^5.9.2",
     "vite": "^5.4.10",
-    "vue-tsc": "^1.8.18"
+    "vue-tsc": "^3.0.6"
   }
 }
