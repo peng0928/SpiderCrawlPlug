@@ -63,6 +63,7 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 
 - 🚀全新的简洁的UI界面😍
 - 🚀适配最新版浏览器😍
+- 🚀支持右键一键复制
 
 
 # 联系方式
