@@ -57,7 +57,7 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 ## V2.0.0
 
 - 🚀新增hook功能(2025.05.07 已发布)
-- 🚀新增hook debugger功能。参考博客（https://blog.csdn.net/2406_83321119/article/details/147606475）
+- 🚀新增hook debugger功能
 
 ## V3.0.0
 
