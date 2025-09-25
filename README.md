@@ -16,7 +16,7 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 1. [GitHub](https://github.com/peng0928/SpiderCrawlPlug)
 2. [最新版下载链接](https://github.com/peng0928/SpiderCrawlPlug/releases/download/v3.0.0/SpiderCrawlPlug3.zip)
 3. [下载地址](https://github.com/peng0928/SpiderCrawlPlug/releases)
-   `最新版请选择V2版本, chrome 64位的版本建议使用V2版本, chrome 32位的版本建议使用V1版本`
+   `最新版请选择V3版本, chrome 64位的版本建议使用V3版本, chrome 32位的版本建议使用V1版本`
 
 - 在chrome拓展页面加载已解压的拓展程序，如图
   ![img.png](img/img.png)
