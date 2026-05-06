@@ -38,6 +38,8 @@ chrome.devtools.network.onRequestFinished.addListener(async (...args) => {
       };
       const query = {...data, timestamp: timestamp};
       // 打开IndexedDB
+      log("[Response]", status, url, data, content)
+
       const request = indexedDB.open(db_name, db_version);
       request.onupgradeneeded = function (event) {
         const db = event.target.result;
@@ -90,7 +92,32 @@ chrome.devtools.network.onRequestFinished.addListener(async (...args) => {
   }
 });
 
+// sw.js
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
+chrome.webRequest.onBeforeRequest.addListener(
+  details => {
+    if (!/\.(js|css|htm|html)(\?.*)?$/i.test(details.url)) return;
+
+    // 告诉 Chrome 我们要过滤响应
+    const filter = chrome.webRequest.filterResponseData(details.requestId);
+    let chunks = [];
+
+    filter.ondata = event => {
+      chunks.push(event.data);
+    };
+
+    filter.onstop = () => {
+      // 拼成完整文本
+      const raw = chunks.map(ab => decoder.decode(ab, {stream: true})).join('');
+      const cleaned = raw.replace(/\bdebugger\b[;\s]*/g, '');
+      // 写回
+      filter.write(encoder.encode(cleaned));
+      filter.close();
+    };
+  }
+);
 
 
 </script>

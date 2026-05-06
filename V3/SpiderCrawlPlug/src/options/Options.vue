@@ -857,7 +857,7 @@ const copyToCys = () => {
   document.body.removeChild(fakeTextArea)
   Message.success('已复制到剪贴板')
 }
-const handleCurl = (e:any) => {
+const handleCurl = (e: any) => {
   curlPyString.value = curlToPython(e)
 }
 const handleCurlStr = (e) => {
@@ -989,6 +989,145 @@ const try_parse = (e: any) => {
   }
   return e
 }
+
+
+const exportHAR = async () => {
+  if (selectedKeys.value.length === 0) {
+    Message.warning('请先选择要导出的数据包')
+    return
+  }
+
+  const selectedItems = NetWorkData.value.filter(item =>
+    selectedKeys.value.includes(item.id),
+  )
+
+  if (selectedItems.length === 0) {
+    Message.warning('未找到选中的数据包')
+    return
+  }
+
+  Message.info(`正在导出 ${selectedItems.length} 条数据...`)
+
+  try {
+    const harData = await buildHAR(selectedItems)
+    if (harData.log.entries.length > 0) {
+      downloadHAR(harData)
+    } else {
+      Message.error('导出数据为空,请检查选中的数据包')
+    }
+  } catch (error) {
+    console.error('导出HAR失败:', error)
+    Message.error('导出失败: ' + error.message)
+  }
+}
+
+const buildHAR = (items: any[]): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const har: any = {
+      log: {
+        version: '1.2',
+        creator: {
+          name: 'SpiderCrawlPlug',
+          version: '3.0.0',
+        },
+        entries: [],
+      },
+    }
+
+    let completedCount = 0
+    const totalCount = items.length
+
+    if (totalCount === 0) {
+      resolve(har)
+      return
+    }
+
+    items.forEach((item, index) => {
+      dbFindById(item.id, (data: any) => {
+        try {
+          if (data) {
+            const entry = convertToHAREntry(data)
+            har.log.entries.push(entry)
+          } else {
+            console.warn(`未找到ID为 ${item.id} 的数据`)
+          }
+        } catch (error) {
+          console.error(`转换第 ${index + 1} 条数据失败:`, error)
+        } finally {
+          completedCount++
+          // 当所有条目都处理完成后resolve
+          if (completedCount === totalCount) {
+            // 按时间排序
+            har.log.entries.sort((a, b) =>
+              new Date(a.startedDateTime).getTime() - new Date(b.startedDateTime).getTime(),
+            )
+            resolve(har)
+          }
+        }
+      })
+    })
+  })
+}
+
+const convertToHAREntry = (data: any) => {
+  const request = data.request
+  const response = data.response
+
+  const entry: any = {
+    startedDateTime: new Date(Number(data.timestamp)).toISOString(),
+    time: parseInt(data.time) || 0,
+    request: {
+      method: request.method || 'GET',
+      url: request.url || '',
+      httpVersion: request.httpVersion || 'HTTP/1.1',
+      cookies: request.cookies || [],
+      headers: request.headers || [],
+      queryString: request.queryString || [],
+      postData: request.postData || null,
+      headersSize: -1,
+      bodySize: -1,
+    },
+    response: {
+      status: response.status || 0,
+      statusText: response.statusText || '',
+      httpVersion: response.httpVersion || request.httpVersion || 'HTTP/1.1',
+      cookies: response.cookies || [],
+      headers: response.headers || [],
+      content: {
+        size: response.content?.size || 0,
+        mimeType: response.content?.mimeType || 'application/octet-stream',
+        text: data.content || '',
+      },
+      redirectURL: response.redirectURL || '',
+      headersSize: -1,
+      bodySize: -1,
+    },
+    cache: {},
+    timings: {
+      send: 0,
+      wait: parseInt(data.time) || 0,
+      receive: 0,
+    },
+  }
+
+  return entry
+}
+
+const downloadHAR = (harData: any) => {
+  const harStr = JSON.stringify(harData, null, 2)
+  const blob = new Blob([harStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const timestamp = new Date().getTime()
+  a.download = `spider_crawl_${timestamp}.har`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  Message.success(`成功导出 ${harData.log.entries.length} 条数据`)
+}
+
 </script>
 
 <template>
@@ -1031,6 +1170,12 @@ const try_parse = (e: any) => {
             <a-switch type="round" v-model:model-value="spiderSwitch" @click="setAll" />
           </div>
           <div class="flex gap-3 items-center text-center ">
+            <a-button type="primary" status="success" @click="exportHAR" v-if="selectedKeys.length>0">
+              <template #icon>
+                <icon-download />
+              </template>
+              导出 {{ selectedKeys.length }} 个HAR
+            </a-button>
             <a-button type="primary" status="danger" @click="deleteData" v-if="selectedKeys.length>0">
               <template #icon>
                 <icon-delete />
@@ -1270,7 +1415,7 @@ const try_parse = (e: any) => {
                   </a-col>
 
                   <div class="text-left ml-5 w-[48%] text-md ">
-                     <a-textarea
+                    <a-textarea
                       v-model="curlPyString"
                       :auto-size="{
                               minRows:23,

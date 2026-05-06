@@ -1,24 +1,25 @@
 // 立刻就能读到
-const node = document.getElementById('_cs_bridge_');
-const data = JSON.parse(node.getAttribute('data-payload'));
+const node = document.getElementById('_cs_bridge_')
+const data = JSON.parse(node.getAttribute('data-payload'))
 
-const spiderSwitch = data.spiderSwitch;
-const hookCookie = data.hookCookie;
-const hookDebug = data.hookDebug;
-const hookInput = data.hookInput;
-const hookJson = data.hookJson;
-const hookUrl = data.hookUrl;
-const hookXhr = data.hookXhr;
-const hookType = data.hookType;
+const spiderSwitch = data.spiderSwitch
+const hookCookie = data.hookCookie
+const hookDebug = data.hookDebug
+const hookInput = data.hookInput
+const hookJson = data.hookJson
+const hookUrl = data.hookUrl
+const hookXhr = data.hookXhr
+const hookType = data.hookType
+const hookJJM = data.hookJJM
 
 
-const iframe = document.createElement('iframe');
-iframe.style.display = 'none';
-document.documentElement.appendChild(iframe);
-let log = iframe.contentWindow.console.log;
+const iframe = document.createElement('iframe')
+iframe.style.display = 'none'
+document.documentElement.appendChild(iframe)
+let log = iframe.contentWindow.console.log
 
 function injectHookJson(e) {
-  const script = document.createElement('script');
+  const script = document.createElement('script')
   script.textContent = `
     function HJSOn(e) {
 
@@ -110,13 +111,13 @@ function injectHookJson(e) {
     log('%cJSONHooks.restore() - 恢复原始方法', 'color: #9C27B0;');
     };
     HJSOn('${e}');
-    `;
-  document.documentElement.appendChild(script);
-  script.remove();
+    `
+  document.documentElement.appendChild(script)
+  script.remove()
 }
 
 function injectHookUrl(e) {
-  const script = document.createElement('script');
+  const script = document.createElement('script')
   script.textContent = `
   function Hook(e) {
   const urlHooks = {
@@ -350,14 +351,14 @@ function injectHookUrl(e) {
   log('%cURLHooks.toggleDeprecationWarnings(true|false) - 切换弃用警告', 'color: #9C27B0;');
   log('%cURLHooks.restore() - 恢复原始方法', 'color: #9C27B0;');}
   Hook('${e}');
-    `;
-  document.documentElement.appendChild(script);
-  script.remove();
+    `
+  document.documentElement.appendChild(script)
+  script.remove()
 }
 
 function injectHookXhr(e) {
-  (function () {
-    const script = document.createElement('script');
+  (function() {
+    const script = document.createElement('script')
     script.textContent = `
 function HookFetch(e) {
 const originalFetch = window.fetch;
@@ -518,15 +519,15 @@ function Hook(e) {
 log('%cXHR Hook 已安装', 'color: #4CAF50; font-weight: bold');
 Hook('${e}');
 HookFetch('${e}');
-`;
-    document.documentElement.appendChild(script);
-    script.remove();
-  })();
+`
+    document.documentElement.appendChild(script)
+    script.remove()
+  })()
 }
 
 function injectHookCookie(e) {
-  (function () {
-    const ck_script = document.createElement('script');
+  (function() {
+    const ck_script = document.createElement('script')
     ck_script.textContent = `
 function Hook(e) {
 
@@ -554,71 +555,252 @@ Object.defineProperty(document, 'cookie', {
 
 }
 
-  ck_log('%cCookie Hook 已安装', 'color: #4CAF50; font-weight: bold');
+  log('%cCookie Hook 已安装', 'color: #4CAF50; font-weight: bold');
   Hook('${e}');
-`;
-    document.documentElement.appendChild(ck_script);
-    ck_script.remove();
-  })();
+`
+    document.documentElement.appendChild(ck_script)
+    ck_script.remove()
+  })()
 }
 
 function injectHookDebugger() {
-  'use strict';
+  'use strict'
   // 立即注入主页面
-  injectScript(window);
+  injectScript(window)
 
   // 同步监听DOM变化，避免等待事件循环
   const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
-        if (node.tagName === "IFRAME") {
+        if (node.tagName === 'IFRAME') {
           // 立即尝试注入，不等待iframe加载完成
           try {
-            injectScript(node.contentWindow);
+            injectScript(node.contentWindow)
           } catch (e) {
-            console.log(e);
+            console.log(e)
           } // 跨域静默失败
           // 同时绑定load事件作为兜底
           node.addEventListener('load', () => {
             try {
-              injectScript(node.contentWindow);
+              injectScript(node.contentWindow)
             } catch (e) {
-              console.log(e);
+              console.log(e)
             }
-          });
+          })
         }
-      });
-    });
-  });
+      })
+    })
+  })
 
   // 在document元素上立即开始监听（早于body存在）
   observer.observe(document.documentElement, {
-    childList: true, subtree: true
-  });
+    childList: true, subtree: true,
+  })
   Array.from(document.getElementsByTagName('iframe')).forEach(iframe => {
     try {
-      if (iframe.contentWindow) injectScript(iframe.contentWindow);
+      if (iframe.contentWindow) injectScript(iframe.contentWindow)
     } catch (e) {
-      console.log(e);
+      console.log(e)
     }
-  });
+  })
+}
+
+function injectHookJJM() {
+
+  'use strict'
+
+  let time = 0
+
+  function hasEncryptProp(obj) {
+    const requiredProps = [
+      'ciphertext',
+      'key',
+      'iv',
+      'algorithm',
+      'mode',
+      'padding',
+      'blockSize',
+      'formatter',
+    ]
+
+    // 检查对象是否存在且为对象类型
+    if (!obj || typeof obj !== 'object') {
+      return false
+    }
+
+    // 检查所有必需属性是否存在
+    for (const prop of requiredProps) {
+      if (!(prop in obj)) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  function hasDecryptProp(obj) {
+    const requiredProps = [
+      'sigBytes',
+      'words',
+    ]
+
+    // 检查对象是否存在且为对象类型
+    if (!obj || typeof obj !== 'object') {
+      return false
+    }
+
+    // 检查所有必需属性是否存在
+    for (const prop of requiredProps) {
+      if (!(prop in obj)) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  function get_sigBytes(size) {
+    switch (size) {
+      case 8:
+        return '64bits'
+      case 16:
+        return '128bits'
+      case 24:
+        return '192bits'
+      case 32:
+        return '256bits'
+      default:
+        return '未获取到'
+    }
+  }
+
+  let temp_apply = Function.prototype.apply
+
+  Function.prototype.apply = function() {
+    // CryptoJS 对称加密
+    if (arguments.length === 2 && arguments[0] && arguments[1] && typeof arguments[1] === 'object' && arguments[1].length === 1 && hasEncryptProp(arguments[1][0])) {
+      if (Object.hasOwn(arguments[0], '$super') && Object.hasOwn(arguments[1], 'callee')) {
+        if (this.toString().indexOf('function()') !== -1 || /^\s*function(?:\s*\*)?\s+[A-Za-z_$][\w$]*\s*\([^)]*\)\s*\{/.test(this.toString()) || /^\s*function\s*\(\s*\)\s*\{/.test(this.toString())) {
+          console.log(...arguments)
+
+          let encrypt_text = arguments[0].$super.toString.call(arguments[1][0])
+          if (encrypt_text !== '[object Object]') {
+            console.log('对称加密后的密文：', encrypt_text)
+          } else {
+            console.log('对称加密后的密文：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出密文。')
+          }
+
+          let key = arguments[1][0]['key'].toString()
+          if (key !== '[object Object]') {
+            console.log('对称加密Hex key：', key)
+          } else {
+            console.log('对称加密Hex key：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出key。')
+          }
+
+          let iv = arguments[1][0]['iv']
+
+          if (iv) {
+            if (iv.toString() !== '[object Object]') {
+              console.log('对称加密Hex iv：', iv.toString())
+            } else {
+              console.log('对称加密Hex iv：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出iv。')
+            }
+          } else {
+            console.log('对称加密时未用到iv')
+          }
+          if (arguments[1][0]['padding']) {
+            console.log('对称加密时的填充模式：', arguments[1][0]['padding'])
+          }
+          if (arguments[1][0]['mode'] && Object.hasOwn(arguments[1][0]['mode'], 'Encryptor')) {
+            console.log('对称加密时的运算模式：', arguments[1][0]['mode']['Encryptor']['processBlock'])
+          }
+          if (arguments[1][0]['key'] && Object.hasOwn(arguments[1][0]['key'], 'sigBytes')) {
+            console.log('对称加密时的密钥长度：', get_sigBytes(arguments[1][0]['key']['sigBytes']))
+          }
+          console.log('%c---------------------------------------------------------------------', 'color: green;')
+        } else {
+          console.log(...arguments)
+          console.log('对称加密：如果上方正常输出了key、iv等加密参数可忽略本条信息。由于一些必要因素导致未能输出key、iv等加密参数，请自行使用上方打印的对象进行toString调用输出key、iv等加密参数。')
+          console.log('%c---------------------------------------------------------------------', 'color: green;')
+        }
+      }
+      // CryptoJS 对称解密
+    } else if (arguments.length === 2 && arguments[0] && arguments[1] && typeof arguments[1] === 'object' && arguments[1].length === 3 && hasDecryptProp(arguments[1][1])) {
+      if (Object.hasOwn(arguments[0], '$super') && Object.hasOwn(arguments[1], 'callee')) {
+        if (this.toString().indexOf('function()') === -1 && arguments[1][0] === 2) {
+          console.log(...arguments)
+
+          let key = arguments[1][1].toString()
+          if (key !== '[object Object]') {
+            console.log('对称解密Hex key：', key)
+          } else {
+            console.log('对称解密Hex key：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出key。')
+          }
+
+          if (Object.hasOwn(arguments[1][2], 'iv') && arguments[1][2]['iv']) {
+            let iv = arguments[1][2]['iv'].toString()
+            if (iv !== '[object Object]') {
+              console.log('对称解密Hex iv：', iv)
+            } else {
+              console.log('对称解密Hex iv：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出iv。')
+            }
+          } else {
+            console.log('对称解密时未用到iv')
+          }
+
+          if (Object.hasOwn(arguments[1][2], 'padding') && arguments[1][2]['padding']) {
+            console.log('对称解密时的填充模式：', arguments[1][2]['padding'])
+          }
+          if (Object.hasOwn(arguments[1][2], 'mode') && arguments[1][2]['mode']) {
+            console.log('对称解密时的运算模式：', arguments[1][2]['mode']['Encryptor']['processBlock'])
+          }
+          if (time === 0) {
+            console.log('可使用我的脚本进行fuzz加解密参数（算法、模式、填充方式等）：https://github.com/0xsdeo/Fuzz_Crypto_Algorithms')
+            time += 1
+          }
+          console.log('%c---------------------------------------------------------------------', 'color: green;')
+        }
+      }
+      // CryptoJS 哈希 / HMAC
+    } else if (arguments.length === 2 && arguments[0] && arguments[1] && typeof arguments[0] === 'object' && typeof arguments[1] === 'object') {
+      if (arguments[0].__proto__ && Object.hasOwn(arguments[0].__proto__, '$super') && Object.hasOwn(arguments[0].__proto__, '_doFinalize') && arguments[0].__proto__.__proto__ && Object.hasOwn(arguments[0].__proto__.__proto__, 'finalize')) {
+        if (arguments[0].__proto__.__proto__.finalize.toString().indexOf('哈希/HMAC') === -1) {
+          let temp_finalize = arguments[0].__proto__.__proto__.finalize
+
+          arguments[0].__proto__.__proto__.finalize = function() {
+            if (!(Object.hasOwn(this, 'init'))) {
+              let hash = temp_finalize.call(this, ...arguments)
+              console.log('哈希/HMAC 加密 原始数据：', ...arguments)
+              console.log('哈希/HMAC 加密 密文：', hash.toString())
+              console.log('哈希/HMAC 加密 密文长度：', hash.toString().length)
+              console.log('注：如果是HMAC加密，本脚本是hook不到密钥的，需自行查找。')
+              console.log('%c---------------------------------------------------------------------', 'color: green;')
+              return hash
+            }
+            return temp_finalize.call(this, ...arguments)
+          }
+        }
+      }
+    }
+    return temp_apply.call(this, ...arguments)
+  }
 }
 
 function injectScript(targetWindow) {
   try {
-    const script = targetWindow.document.createElement('script');
-    script.textContent = `(${injectionCode.toString()})(window);`; // 内联关键代码
-    targetWindow.document.documentElement.appendChild(script);
-    script.remove();
+    const script = targetWindow.document.createElement('script')
+    script.textContent = `(${injectionCode.toString()})(window);` // 内联关键代码
+    targetWindow.document.documentElement.appendChild(script)
+    script.remove()
   } catch (e) {
-    console.log(e);
+    console.log(e)
   }
 }
 
 // 内联的注入脚本核心逻辑
 function injectionCode(currentWindow) {
-  'use strict';
-  console.log("Injected script is running in", currentWindow.location.href);
+  'use strict'
+  console.log('Injected script is running in', currentWindow.location.href)
   if (!window.top.MY_EXTENSION_FUNC_) {
     window.top.MY_EXTENSION_FUNC_ = {
       'Array_isArray': window.top.Array.isArray,
@@ -752,138 +934,153 @@ function injectionCode(currentWindow) {
       'setTimeout': window.top.setTimeout,
       'unescape': window.top.unescape,
     };
-    (function () {
-      'use strict';
-      const isString = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object String]';
-      const isArray = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object Array]';
-      const isObject = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object Object]';
+    (function() {
+      'use strict'
+      const isString = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object String]'
+      const isArray = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object Array]'
+      const isObject = (obj) => window.top.MY_EXTENSION_FUNC_.Object_prototype_toString.call(obj) === '[object Object]'
 
       function removeDebuggerFromString(str) {
         if (str.includes('debugger')) {
           if (window.top.MY_EXTENSION_FUNC_.my_print) {
-            window.top.MY_EXTENSION_FUNC_.console_log(`hook debugger -> "${str}"`);
+            window.top.MY_EXTENSION_FUNC_.console_log(`hook debugger -> "${str}"`)
           }
         }
-        return str.replace(/(^|[^a-zA-Z0-9$_])debugger;?([^a-zA-Z0-9$_]|$)/g, '$1$2').replace(/\\x64\\x65\\x62\\x75\\x67\\x67\\x65\\x72/g, '').replace(/(d|D)(e|E)(b|B)(u|U)(g|G){2}(e|E)(r|R)/g, '');
+        return str.replace(/(^|[^a-zA-Z0-9$_])debugger;?([^a-zA-Z0-9$_]|$)/g, '$1$2').replace(/\\x64\\x65\\x62\\x75\\x67\\x67\\x65\\x72/g, '').replace(/(d|D)(e|E)(b|B)(u|U)(g|G){2}(e|E)(r|R)/g, '')
       }
 
       function removeDebuggerFromArray(arr, visited) {
-        return arr.map((item) => removeDebugger(item, visited));
+        return arr.map((item) => removeDebugger(item, visited))
       }
 
       function removeDebuggerFromObject(obj, visited) {
-        if (visited.has(obj)) return obj;
-        visited.add(obj);
-        const result = {};
+        if (visited.has(obj)) return obj
+        visited.add(obj)
+        const result = {}
         for (const key in obj) {
           if (window.top.MY_EXTENSION_FUNC_.Object_prototype_hasOwnProperty.call(obj, key)) {
-            result[key] = removeDebugger(obj[key], visited);
+            result[key] = removeDebugger(obj[key], visited)
           }
         }
-        return result;
+        return result
       }
 
       function removeDebugger(obj, visited = new WeakSet()) {
         if (isString(obj)) {
-          return removeDebuggerFromString(obj);
+          return removeDebuggerFromString(obj)
         } else if (isArray(obj)) {
-          return removeDebuggerFromArray(obj, visited);
+          return removeDebuggerFromArray(obj, visited)
         } else if (isObject(obj)) {
-          return removeDebuggerFromObject(obj, visited);
+          return removeDebuggerFromObject(obj, visited)
         }
-        return obj;
+        return obj
       }
 
-      window.top.MY_EXTENSION_FUNC_.removeDebugger = removeDebugger;
-    })();
+      window.top.MY_EXTENSION_FUNC_.removeDebugger = removeDebugger
+    })()
   } else {
-    window.top.MY_EXTENSION_FUNC_.console_log('already exist original_window');
+    window.top.MY_EXTENSION_FUNC_.console_log('already exist original_window')
   }
 
 
-  (function (current_window) {
-    'use strict';
-    window.top.MY_EXTENSION_FUNC_.my_print = 1;
+  (function(current_window) {
+    'use strict'
+    window.top.MY_EXTENSION_FUNC_.my_print = 1
 
     function creat_proxy(func_list) {
-      const originalfunc = func_list[0][func_list[1]];
+      const originalfunc = func_list[0][func_list[1]]
       window.top.MY_EXTENSION_FUNC_.Object_defineProperty(func_list[0], func_list[1], {
         value: new window.top.MY_EXTENSION_FUNC_.Proxy(originalfunc, {
           apply(target, thisArg, argumentsList) {
             for (var i = 0; i < argumentsList.length; i++) {
-              argumentsList[i] = window.top.MY_EXTENSION_FUNC_.removeDebugger(argumentsList[i]);
+              argumentsList[i] = window.top.MY_EXTENSION_FUNC_.removeDebugger(argumentsList[i])
             }
-            return Reflect.apply(target, thisArg, argumentsList);
+            return Reflect.apply(target, thisArg, argumentsList)
           },
         }), enumerable: 1,
       })
     }
 
-    var hook_list = [[current_window, 'eval'], [current_window, 'Function'], [current_window.Function.prototype, 'constructor'], [current_window, 'setInterval'], [current_window, 'setTimeout']];
+    var hook_list = [[current_window, 'eval'], [current_window, 'Function'], [current_window.Function.prototype, 'constructor'], [current_window, 'setInterval'], [current_window, 'setTimeout']]
     for (var i = 0; i < hook_list.length; i++) {
-      creat_proxy(hook_list[i]);
+      creat_proxy(hook_list[i])
     }
     ;
 
-    (function () {
-      'use strict';
+    (function() {
+      'use strict'
       window.top.MY_EXTENSION_FUNC_.Object_defineProperty(current_window.console, 'clear', {
         value: new window.top.MY_EXTENSION_FUNC_.Proxy(current_window.console.clear, {
           apply(target, thisArg, argumentsList) {
-            window.top.MY_EXTENSION_FUNC_.console_log('apply clear');
-            return;
-          }
+            window.top.MY_EXTENSION_FUNC_.console_log('apply clear')
+            return
+          },
         }), enumerable: 1,
       })
     }());
-    (function () {
-      'use strict';
+    (function() {
+      'use strict'
       window.top.MY_EXTENSION_FUNC_.Object_defineProperty(current_window.Math, 'random', {
         value: new window.top.MY_EXTENSION_FUNC_.Proxy(current_window.Math.random, {
           apply(target, thisArg, argumentsList) {
             // window.top.MY_EXTENSION_FUNC_.console_log('apply random');
-            return 0.5;
+            return 0.5
           },
         }), enumerable: 1,
-      });
-    }());
+      })
+    }())
 
-  }(currentWindow));
-  window.top.MY_EXTENSION_FUNC_.console_log('over!');
+  }(currentWindow))
+  window.top.MY_EXTENSION_FUNC_.console_log('over!')
+
+  let origin = Function.prototype.constructor
+  Function.prototype.constructor = function(p) {
+    if (p.indexOf('debugger') !== -1) {
+      return function() {
+      }
+    } else {
+      return orgin.apply(this, arguments)
+    }
+  }
 }
 
 if (hookJson) {
   // 确保DOM加载后注入
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectHookJson(hookInput));
+    document.addEventListener('DOMContentLoaded', injectHookJson(hookInput))
   } else {
-    injectHookJson(hookInput);
+    injectHookJson(hookInput)
   }
 }
 if (hookUrl) {
   // 确保DOM加载后注入
-  document.addEventListener('DOMContentLoaded', injectHookUrl(hookInput));
+  document.addEventListener('DOMContentLoaded', injectHookUrl(hookInput))
 }
 if (hookXhr) {
   // 确保DOM加载后注入
-  console.log("------------------正在监听XHR请求------------------")
+  console.log('------------------正在监听XHR请求------------------')
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectHookXhr(hookInput));
+    document.addEventListener('DOMContentLoaded', injectHookXhr(hookInput))
   } else {
-    injectHookXhr(hookInput);
+    injectHookXhr(hookInput)
   }
 }
 if (hookCookie) {
   // 确保DOM加载后注入
-  console.log("------------------正在Hook Cookie------------------")
+  console.log('------------------正在Hook Cookie------------------')
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectHookCookie(hookInput));
+    document.addEventListener('DOMContentLoaded', injectHookCookie(hookInput))
   } else {
-    injectHookCookie(hookInput);
+    injectHookCookie(hookInput)
   }
 }
 if (hookDebug) {
   // 确保DOM加载后注入
-  console.log("------------------正在Hook hookDebugger------------------")
+  console.log('------------------正在Hook hookDebugger------------------')
   injectHookDebugger()
+}
+if (hookJJM) {
+  // 确保DOM加载后注入
+  console.log('------------------正在Hook 加解密------------------')
+  injectHookJJM()
 }

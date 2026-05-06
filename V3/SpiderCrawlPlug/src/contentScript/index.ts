@@ -20,7 +20,7 @@ function pushToPage(obj) {
 }
 
 // 3. 立刻写一条
-chrome.storage.sync.get(['spiderSwitch', 'hookJson', 'hookInput', 'hookUrl', 'hookXhr', 'hookCookie', 'hookType', 'hookDebug'], (result) => {
+chrome.storage.sync.get(['spiderSwitch', 'hookJson', 'hookInput', 'hookUrl', 'hookXhr', 'hookCookie', 'hookType', 'hookDebug', 'hookJJM'], (result) => {
   pushToPage({
     spiderSwitch: result.spiderSwitch,
     hookJson: result.hookJson,
@@ -30,6 +30,7 @@ chrome.storage.sync.get(['spiderSwitch', 'hookJson', 'hookInput', 'hookUrl', 'ho
     hookCookie: result.hookCookie,
     hookType: result.hookType,
     hookDebug: result.hookDebug,
+    hookJJM: result.hookJJM,
   });
   if (result.hookType === 'document start') {
     // 确保DOM加载后注入

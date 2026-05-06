@@ -1,5 +1,5 @@
 {
-  "name": "SpiderCrawlPlug",
+  "name": "SpiderCrawlPlug ➡️ Dev",
   "description": "",
   "version": "3.0.0",
   "manifest_version": 3,
@@ -21,20 +21,20 @@
   },
   "content_scripts": [
     {
-      "js": [
-        "assets/chunk-CBBoONN6.js"
-      ],
       "matches": [
         "<all_urls>"
+      ],
+      "js": [
+        "src/contentScript/index.ts-loader.js"
       ],
       "run_at": "document_start"
     },
     {
-      "js": [
-        "assets/chunk-BMl9U9UD.js"
-      ],
       "matches": [
         "<all_urls>"
+      ],
+      "js": [
+        "src/contentScript/index2.ts-loader.js"
       ],
       "run_at": "document_end"
     }
@@ -44,24 +44,37 @@
   },
   "web_accessible_resources": [
     {
-      "matches": [],
       "resources": [
         "img/logo-16.png",
         "img/logo-32.png",
         "img/logo-48.png",
         "img/logo-128.png"
       ],
-      "use_dynamic_url": false
+      "matches": []
+    },
+    {
+      "resources": [
+        "src/contentScript/inject.ts"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    {
+      "resources": [
+        "src/contentScript/inject2.ts"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     },
     {
       "matches": [
         "<all_urls>"
       ],
       "resources": [
-        "src/contentScript/inject.ts",
-        "src/contentScript/inject2.ts",
-        "assets/chunk-CBBoONN6.js",
-        "assets/chunk-BMl9U9UD.js"
+        "**/*",
+        "*"
       ],
       "use_dynamic_url": false
     }
