@@ -1,4 +1,4 @@
-![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=peng0928&show_icons=true)
+
 # 1.介绍
 
 `
