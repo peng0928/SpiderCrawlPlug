@@ -11,6 +11,8 @@ const hookUrl = data.hookUrl
 const hookXhr = data.hookXhr
 const hookType = data.hookType
 const hookJJM = data.hookJJM
+const dynamicJsCode = data.dynamicJsCode
+const dynamicJsEnabled = data.dynamicJsEnabled
 
 
 const iframe = document.createElement('iframe')
@@ -1084,3 +1086,11 @@ if (hookJJM) {
   console.log('------------------正在Hook 加解密------------------')
   injectHookJJM()
 }
+
+if (dynamicJsEnabled) {
+  // 确保DOM加载后注入
+  console.log('------------------正在Hook 自定义代码------------------')
+  eval(dynamicJsCode)
+}
+
+

@@ -38,7 +38,7 @@ chrome.devtools.network.onRequestFinished.addListener(async (...args) => {
       };
       const query = {...data, timestamp: timestamp};
       // 打开IndexedDB
-      log("[Response]", status, url, data, content)
+      // log("[Response]", status, url, data, content)
 
       const request = indexedDB.open(db_name, db_version);
       request.onupgradeneeded = function (event) {
@@ -84,8 +84,8 @@ chrome.devtools.network.onRequestFinished.addListener(async (...args) => {
         content: content,
       };
       const query = {...data, timestamp: timestamp};
-      log(`[Request] ${method} ${url}`, '\n[params]', queryString, '\n[data]', postData)
-      log("[Response]", status, url, data)
+      // log(`[Request] ${method} ${url}`, '\n[params]', queryString, '\n[data]', postData)
+      // log("[Response]", status, url, data)
     } catch (err) {
       log(err.stack || err.toString());
     }
