@@ -73,3 +73,6 @@ SpiderCrawlPlug（chrome抓包插件） Google Chrome 网页包捕获插件、�
 
 - 微信(麻烦备注一下: 抓包插件): penr1314
   [给作者提bug](https://github.com/peng0928/SpiderCrawlPlug/issues)
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=peng0928/SpiderCrawlPlug&type=date&legend=top-left)](https://www.star-history.com/?repos=peng0928%2FSpiderCrawlPlug&type=date&logscale=&legend=top-left)
