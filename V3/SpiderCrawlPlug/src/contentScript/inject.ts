@@ -612,6 +612,24 @@ function injectHookJJM() {
   'use strict'
 
   let time = 0
+  const wordArrayToString = function(wordArray) {
+    try {
+      let bytes = []
+      for (let i = 0; i < wordArray.words.length; i++) {
+        let word = wordArray.words[i]
+        // 处理每个字（32位）中的4个字节
+        for (let j = 3; j >= 0; j--) { // 大端序
+          if (bytes.length < wordArray.sigBytes) {
+            bytes.push((word >> (j * 8)) & 0xff)
+          }
+        }
+      }
+      const res = new TextDecoder('utf-8').decode(new Uint8Array(bytes))
+      console.log(`解密 => ${res}`)
+    } catch (e) {
+      console.log('对称加密Hex：由于toString方法并未获取到。')
+    }
+  }
 
   function hasEncryptProp(obj) {
     const requiredProps = [
@@ -696,7 +714,7 @@ function injectHookJJM() {
           if (key !== '[object Object]') {
             console.log('对称加密Hex key：', key)
           } else {
-            console.log('对称加密Hex key：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出key。')
+            wordArrayToString(arguments[1][0]['key'])
           }
 
           let iv = arguments[1][0]['iv']
@@ -705,9 +723,10 @@ function injectHookJJM() {
             if (iv.toString() !== '[object Object]') {
               console.log('对称加密Hex iv：', iv.toString())
             } else {
-              console.log('对称加密Hex iv：由于toString方法并未获取到，请自行使用上方打印的对象进行toString调用输出iv。')
+              wordArrayToString(iv)
             }
           } else {
+            wordArrayToString(iv)
             console.log('对称加密时未用到iv')
           }
           if (arguments[1][0]['padding']) {
